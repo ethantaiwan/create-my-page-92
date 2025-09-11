@@ -1,4 +1,4 @@
-import logoImage from "@/assets/evo-logo.png";
+import logoImage from "@/assets/evo-logo-transparent.png";
 
 const Header = () => {
   return (

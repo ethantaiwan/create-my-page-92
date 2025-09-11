@@ -48,7 +48,7 @@ export default {
           foreground: "hsl(var(--card-foreground))",
         },
         // Custom colors for video script generator
-        "header-bg": "hsl(var(--header-bg))",
+        "header-bg": "var(--header-bg)",
         "step-active": "hsl(var(--step-active))",
         "step-inactive": "hsl(var(--step-inactive))",
         "step-text": "hsl(var(--step-text))",
@@ -108,7 +108,7 @@ export default {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.3s ease-out",
-        "tech-pulse": "tech-pulse 2s ease-in-out infinite",
+        "tech-pulse": "tech-pulse 4s ease-in-out infinite",
       },
     },
   },
