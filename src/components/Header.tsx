@@ -2,7 +2,7 @@ import logoImage from "@/assets/evo-logo-transparent.png";
 
 const Header = () => {
   return (
-    <header className="bg-header-bg text-step-text py-4 px-6">
+    <header className="bg-header-bg text-step-text py-4 px-6" style={{ background: 'var(--header-bg)' }}>
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex items-center space-x-3">
           <img 

@@ -49,6 +49,7 @@ export default {
         },
         // Custom colors for video script generator
         "header-bg": "var(--header-bg)",
+        "footer-bg": "var(--footer-bg)",
         "step-active": "hsl(var(--step-active))",
         "step-inactive": "hsl(var(--step-inactive))",
         "step-text": "hsl(var(--step-text))",

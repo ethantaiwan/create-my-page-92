@@ -80,9 +80,14 @@ const Index = () => {
     <div className="min-h-screen" style={{ background: 'var(--gradient-bg)' }}>
       <Header />
       <main className="container mx-auto px-4 py-8">
-        <h1 className="text-center text-3xl font-bold text-foreground mb-8">
-          影片腳本生成器
-        </h1>
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-primary mb-4">
+            影片腳本生成器
+          </h1>
+          <p className="text-lg text-muted-foreground">
+            透過 AI 驅動的技術，讓您輕鬆打造專業級影片腳本
+          </p>
+        </div>
         <ProgressSteps 
           currentStep={currentStep} 
           totalSteps={4}
@@ -96,7 +101,7 @@ const Index = () => {
           {renderCurrentStep()}
         </div>
       </main>
-      <footer className="bg-primary text-primary-foreground text-center py-4 mt-16">
+      <footer className="bg-footer-bg text-primary-foreground text-center py-6 mt-16">
         <p>© 2025 Video Script Generator</p>
       </footer>
     </div>
