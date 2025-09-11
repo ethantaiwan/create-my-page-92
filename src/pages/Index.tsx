@@ -83,7 +83,15 @@ const Index = () => {
         <h1 className="text-center text-3xl font-bold text-foreground mb-8">
           影片腳本生成器
         </h1>
-        <ProgressSteps currentStep={currentStep} totalSteps={4} />
+        <ProgressSteps 
+          currentStep={currentStep} 
+          totalSteps={4}
+          onStepClick={(step) => {
+            if (step <= currentStep) {
+              setCurrentStep(step);
+            }
+          }}
+        />
         <div className="mt-8">
           {renderCurrentStep()}
         </div>

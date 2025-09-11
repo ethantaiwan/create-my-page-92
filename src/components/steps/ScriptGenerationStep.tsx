@@ -98,14 +98,23 @@ const ScriptGenerationStep = ({ formData, onPrev }: ScriptGenerationStepProps) =
           </Card>
           
           <div className="flex justify-center">
-            <Button 
-              onClick={downloadScript}
-              className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-base font-medium"
-              disabled={isGenerating || !generatedScript}
-            >
-              <Download className="w-4 h-4 mr-2" />
-              下載文字腳本
-            </Button>
+            <div className="flex space-x-4">
+              <Button 
+                variant="outline"
+                onClick={onPrev}
+                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-3 text-base font-medium"
+              >
+                ← 上一步
+              </Button>
+              <Button 
+                onClick={downloadScript}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-base font-medium"
+                disabled={isGenerating || !generatedScript}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                下載文字腳本
+              </Button>
+            </div>
           </div>
         </div>
       </CardContent>

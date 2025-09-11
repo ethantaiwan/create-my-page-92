@@ -102,7 +102,14 @@ const VisualStyleStep = ({
             </div>
           </div>
           
-          <div className="flex justify-end">
+          <div className="flex justify-between">
+            <Button 
+              variant="outline"
+              onClick={onPrev}
+              className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-3 text-base font-medium"
+            >
+              ← 上一步
+            </Button>
             <Button 
               onClick={onNext}
               className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-base font-medium"
