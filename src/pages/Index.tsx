@@ -101,7 +101,7 @@ const Index = () => {
           {renderCurrentStep()}
         </div>
       </main>
-      <footer className="bg-footer-bg text-primary-foreground text-center py-6 mt-16">
+      <footer className="text-primary-foreground text-center py-6 mt-16" style={{ background: 'var(--footer-bg)' }}>
         <p>© 2025 Video Script Generator</p>
       </footer>
     </div>
