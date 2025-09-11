@@ -47,6 +47,11 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        // Custom colors for video script generator
+        "header-bg": "hsl(var(--header-bg))",
+        "step-active": "hsl(var(--step-active))",
+        "step-inactive": "hsl(var(--step-inactive))",
+        "step-text": "hsl(var(--step-text))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
