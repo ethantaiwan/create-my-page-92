@@ -91,7 +91,7 @@ const ScriptGenerationStep = ({ formData, onPrev }: ScriptGenerationStepProps) =
               <Textarea
                 value={isGenerating ? "正在生成腳本，請稍候..." : generatedScript}
                 onChange={(e) => setGeneratedScript(e.target.value)}
-                className="min-h-[300px] text-base resize-none border-primary/30 focus:border-primary bg-card/80"
+                className="min-h-[300px] text-base resize-none border border-dashed border-primary/30 focus:border-dashed focus:border-primary bg-card/80"
                 disabled={isGenerating}
               />
             </CardContent>
