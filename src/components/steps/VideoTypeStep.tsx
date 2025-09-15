@@ -28,7 +28,7 @@ const VideoTypeStep = ({
   onPrev 
 }: VideoTypeStepProps) => {
   return (
-    <Card className="max-w-4xl mx-auto" style={{ boxShadow: 'var(--card-shadow)' }}>
+    <Card className="max-w-4xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
       <CardContent className="p-8">
         <h2 className="text-xl font-semibold text-primary mb-6 text-center">
           Q2. 預計製作哪種類型的影片？主要曝光在哪些平台？
@@ -45,7 +45,7 @@ const VideoTypeStep = ({
                   className={`px-4 py-2 rounded-md border-2 transition-colors ${
                     videoType === type
                       ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-white text-foreground border-gray-300 hover:border-primary"
+                      : "bg-card/80 text-foreground border-primary/30 hover:border-primary hover:bg-primary/5"
                   }`}
                 >
                   {type}
@@ -60,7 +60,7 @@ const VideoTypeStep = ({
               placeholder="例：我想做一支品牌形象影片，放在YouTube與社群廣告用"
               value={targetPlatform}
               onChange={(e) => onTargetPlatformChange(e.target.value)}
-              className="text-base border-2 border-gray-200 focus:border-primary"
+              className="text-base border-2 border-primary/30 focus:border-primary bg-card/80"
             />
           </div>
           

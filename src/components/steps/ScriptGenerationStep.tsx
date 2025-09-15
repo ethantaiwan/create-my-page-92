@@ -59,7 +59,7 @@ const ScriptGenerationStep = ({ formData, onPrev }: ScriptGenerationStepProps) =
   }, []);
 
   return (
-    <Card className="max-w-4xl mx-auto" style={{ boxShadow: 'var(--card-shadow)' }}>
+    <Card className="max-w-4xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
       <CardContent className="p-8">
         <h2 className="text-2xl font-semibold text-foreground mb-2 text-center">
           影片腳本生成
@@ -70,7 +70,7 @@ const ScriptGenerationStep = ({ formData, onPrev }: ScriptGenerationStepProps) =
         </p>
         
         <div className="space-y-6">
-          <Card className="bg-blue-50 border-blue-200">
+          <Card className="bg-accent/10 border-primary/20">
             <CardContent className="p-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-semibold text-primary">AI腳本生成結果</h3>
@@ -91,7 +91,7 @@ const ScriptGenerationStep = ({ formData, onPrev }: ScriptGenerationStepProps) =
               <Textarea
                 value={isGenerating ? "正在生成腳本，請稍候..." : generatedScript}
                 onChange={(e) => setGeneratedScript(e.target.value)}
-                className="min-h-[300px] text-base resize-none border-blue-300 focus:border-primary bg-white"
+                className="min-h-[300px] text-base resize-none border-primary/30 focus:border-primary bg-card/80"
                 disabled={isGenerating}
               />
             </CardContent>

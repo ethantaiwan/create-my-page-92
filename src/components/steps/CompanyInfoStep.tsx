@@ -10,7 +10,7 @@ interface CompanyInfoStepProps {
 
 const CompanyInfoStep = ({ value, onChange, onNext }: CompanyInfoStepProps) => {
   return (
-    <Card className="max-w-4xl mx-auto" style={{ boxShadow: 'var(--card-shadow)' }}>
+    <Card className="max-w-4xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
       <CardContent className="p-8">
         <h2 className="text-xl font-semibold text-primary mb-6 text-center">
           Q1. 請說明您的公司或品牌，以及主要產品或服務？
@@ -21,7 +21,7 @@ const CompanyInfoStep = ({ value, onChange, onNext }: CompanyInfoStepProps) => {
             placeholder="例：我們是專做天然保健食品的品牌，販售益生菌產品。"
             value={value}
             onChange={(e) => onChange(e.target.value)}
-            className="min-h-[300px] text-base resize-none border-2 border-gray-200 focus:border-primary"
+            className="min-h-[300px] text-base resize-none border-2 border-primary/30 focus:border-primary bg-card/80"
           />
           
           <div className="flex justify-end">

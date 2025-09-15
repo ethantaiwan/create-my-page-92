@@ -49,7 +49,7 @@ const VisualStyleStep = ({
   };
 
   return (
-    <Card className="max-w-6xl mx-auto" style={{ boxShadow: 'var(--card-shadow)' }}>
+    <Card className="max-w-6xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
       <CardContent className="p-8">
         <h2 className="text-xl font-semibold text-primary mb-6 text-center">
           Q3. 請選擇希望影片呈現的風格與影像手法？
@@ -66,12 +66,12 @@ const VisualStyleStep = ({
                   className={`aspect-[3/4] rounded-lg border-2 transition-colors flex flex-col items-center justify-center p-4 ${
                     selectedStyle === style.id || (selectedStyle === "" && style.selected)
                       ? "border-primary bg-primary/5"
-                      : "border-gray-300 bg-gray-100 hover:border-primary/50"
+                      : "border-primary/30 bg-card/60 hover:border-primary/50 hover:bg-primary/5"
                   }`}
                 >
-                  <div className="w-full h-32 bg-gray-200 rounded mb-2 flex items-center justify-center">
+                  <div className="w-full h-32 bg-muted rounded mb-2 flex items-center justify-center">
                     {style.id === "robot" && (
-                      <div className="w-16 h-16 bg-blue-500 rounded"></div>
+                      <div className="w-16 h-16 bg-primary rounded"></div>
                     )}
                   </div>
                   <span className="text-sm font-medium">{style.name}</span>
@@ -90,10 +90,10 @@ const VisualStyleStep = ({
                   className={`aspect-[3/2] rounded-lg border-2 transition-colors flex flex-col items-center justify-center p-4 ${
                     selectedTechniques.includes(technique.id)
                       ? "border-primary bg-primary/5"
-                      : "border-gray-300 bg-gray-100 hover:border-primary/50"
+                      : "border-primary/30 bg-card/60 hover:border-primary/50 hover:bg-primary/5"
                   }`}
                 >
-                  <div className="w-full h-20 bg-gray-200 rounded mb-2 flex items-center justify-center text-gray-600">
+                  <div className="w-full h-20 bg-muted rounded mb-2 flex items-center justify-center text-muted-foreground">
                     {technique.name && <span className="text-sm">{technique.name}</span>}
                   </div>
                   <span className="text-sm font-medium">{technique.label}</span>
