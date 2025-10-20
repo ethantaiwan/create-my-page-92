@@ -11,11 +11,14 @@ interface VisualStyleStepProps {
 }
 
 const visualStyles = [
-  { id: "simple", name: "簡約典雅", selected: true },
-  { id: "dynamic", name: "活力動感" },
-  { id: "warm", name: "溫暖人文" },
-  { id: "tech", name: "科技未來" },
-  { id: "robot", name: "機器人風" },
+  "一鏡到底",
+  "ASMR風格",
+  "手持紀錄感",
+  "慢動作氛圍",
+  "Split Screen 分割畫面",
+  "延遲攝影",
+  "光影敘事",
+  "蒙太奇剪接"
 ];
 
 const videoTechniques = [
@@ -58,23 +61,18 @@ const VisualStyleStep = ({
         <div className="space-y-8">
           <div>
             <h3 className="text-lg font-semibold mb-4">視覺風格</h3>
-            <div className="grid grid-cols-5 gap-4">
+            <div className="flex flex-wrap gap-3">
               {visualStyles.map((style) => (
                 <button
-                  key={style.id}
-                  onClick={() => onStyleChange(style.id)}
-                  className={`aspect-[3/4] rounded-lg border-2 transition-colors flex flex-col items-center justify-center p-4 ${
-                    selectedStyle === style.id || (selectedStyle === "" && style.selected)
-                      ? "border-primary bg-primary/5"
-                      : "border-primary/30 bg-card/60 hover:border-primary/50 hover:bg-primary/5"
+                  key={style}
+                  onClick={() => onStyleChange(style)}
+                  className={`px-4 py-2 rounded-md border-2 transition-colors ${
+                    selectedStyle === style
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card/80 text-foreground border-primary/30 hover:border-primary hover:bg-primary/5"
                   }`}
                 >
-                  <div className="w-full h-32 bg-muted rounded mb-2 flex items-center justify-center">
-                    {style.id === "robot" && (
-                      <div className="w-16 h-16 bg-primary rounded"></div>
-                    )}
-                  </div>
-                  <span className="text-sm font-medium">{style.name}</span>
+                  {style}
                 </button>
               ))}
             </div>
