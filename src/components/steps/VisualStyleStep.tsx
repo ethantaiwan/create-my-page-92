@@ -1,13 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import oneTakeImg from "@/assets/technique-one-take.jpg";
-import asmrImg from "@/assets/technique-asmr.jpg";
-import handheldImg from "@/assets/technique-handheld.jpg";
-import slowMotionImg from "@/assets/technique-slow-motion.jpg";
-import splitScreenImg from "@/assets/technique-split-screen.jpg";
-import timelapseImg from "@/assets/technique-timelapse.jpg";
-import lightingImg from "@/assets/technique-lighting.jpg";
-import montageImg from "@/assets/technique-montage.jpg";
+import realisticPhotoImg from "@/assets/style-realistic-photo.jpg";
+import animation3dImg from "@/assets/style-3d-animation.jpg";
+import japaneseHanddrawnImg from "@/assets/style-japanese-handdrawn.jpg";
+import clayAnimationImg from "@/assets/style-clay-animation.jpg";
+import paperCutImg from "@/assets/style-paper-cut.jpg";
 
 interface VisualStyleStepProps {
   selectedStyle: string;
@@ -19,14 +16,11 @@ interface VisualStyleStepProps {
 }
 
 const videoTechniques = [
-  { id: "one-take", label: "一鏡到底", image: oneTakeImg },
-  { id: "asmr", label: "ASMR風格", image: asmrImg },
-  { id: "handheld", label: "手持紀錄感", image: handheldImg },
-  { id: "slow-motion", label: "慢動作氛圍", image: slowMotionImg },
-  { id: "split-screen", label: "Split Screen 分割畫面", image: splitScreenImg },
-  { id: "timelapse", label: "延遲攝影", image: timelapseImg },
-  { id: "lighting", label: "光影敘事", image: lightingImg },
-  { id: "montage", label: "蒙太奇剪接", image: montageImg },
+  { id: "realistic-photo", label: "寫實照片風格", image: realisticPhotoImg },
+  { id: "3d-animation", label: "3D動畫風格", image: animation3dImg },
+  { id: "japanese-handdrawn", label: "日式手繪風格", image: japaneseHanddrawnImg },
+  { id: "clay-animation", label: "立體黏土風格", image: clayAnimationImg },
+  { id: "paper-cut", label: "剪紙風格", image: paperCutImg },
 ];
 
 const VisualStyleStep = ({ 
@@ -55,8 +49,8 @@ const VisualStyleStep = ({
         
         <div className="space-y-8">
           <div>
-            <h3 className="text-lg font-semibold mb-4">影像手法</h3>
-            <div className="grid grid-cols-4 gap-4">
+            <h3 className="text-lg font-semibold mb-4">視覺風格</h3>
+            <div className="grid grid-cols-5 gap-4">
               {videoTechniques.map((technique) => (
                 <button
                   key={technique.id}
