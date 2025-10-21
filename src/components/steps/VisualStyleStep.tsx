@@ -59,10 +59,9 @@ const VisualStyleStep = ({
                       : "border-primary/30 bg-card/60 hover:border-primary/50 hover:bg-primary/5"
                   }`}
                 >
-                  <div className="w-full h-20 bg-muted rounded mb-2 flex items-center justify-center text-muted-foreground">
+                  <div className="w-full h-full bg-muted rounded flex items-center justify-center text-muted-foreground">
                     {technique.name && <span className="text-sm">{technique.name}</span>}
                   </div>
-                  <span className="text-sm font-medium">{technique.label}</span>
                 </button>
               ))}
             </div>
