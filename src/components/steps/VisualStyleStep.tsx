@@ -10,28 +10,15 @@ interface VisualStyleStepProps {
   onPrev: () => void;
 }
 
-const visualStyles = [
-  "一鏡到底",
-  "ASMR風格",
-  "手持紀錄感",
-  "慢動作氛圍",
-  "Split Screen 分割畫面",
-  "延遲攝影",
-  "光影敘事",
-  "蒙太奇剪接"
-];
-
 const videoTechniques = [
-  { id: "slow-motion", name: "Slow Motion", label: "slow-motion" },
-  { id: "closeup", name: "Close Up", label: "近距離特寫" },
-  { id: "technique3", name: "", label: "○○○○○○○○○○" },
-  { id: "technique4", name: "", label: "○○○○○○○○" },
-  { id: "technique5", name: "", label: "○○○○○○○○○○" },
-  { id: "technique6", name: "", label: "○○○○○○○○○○" },
-  { id: "technique7", name: "", label: "○○○○○○○○○○" },
-  { id: "technique8", name: "", label: "○○○○○○○○○○○○" },
-  { id: "technique9", name: "", label: "○○○○○○○○○○" },
-  { id: "technique10", name: "", label: "○○○○○○○○○○" },
+  { id: "one-take", name: "", label: "一鏡到底" },
+  { id: "asmr", name: "", label: "ASMR風格" },
+  { id: "handheld", name: "", label: "手持紀錄感" },
+  { id: "slow-motion", name: "", label: "慢動作氛圍" },
+  { id: "split-screen", name: "", label: "Split Screen 分割畫面" },
+  { id: "timelapse", name: "", label: "延遲攝影" },
+  { id: "lighting", name: "", label: "光影敘事" },
+  { id: "montage", name: "", label: "蒙太奇剪接" },
 ];
 
 const VisualStyleStep = ({ 
@@ -60,27 +47,8 @@ const VisualStyleStep = ({
         
         <div className="space-y-8">
           <div>
-            <h3 className="text-lg font-semibold mb-4">視覺風格</h3>
-            <div className="flex flex-wrap gap-3">
-              {visualStyles.map((style) => (
-                <button
-                  key={style}
-                  onClick={() => onStyleChange(style)}
-                  className={`px-4 py-2 rounded-md border-2 transition-colors ${
-                    selectedStyle === style
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-card/80 text-foreground border-primary/30 hover:border-primary hover:bg-primary/5"
-                  }`}
-                >
-                  {style}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
             <h3 className="text-lg font-semibold mb-4">影像手法</h3>
-            <div className="grid grid-cols-5 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               {videoTechniques.map((technique) => (
                 <button
                   key={technique.id}
