@@ -2,6 +2,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
+import oneTakeImg from "@/assets/video-one-take.jpg";
+import asmrImg from "@/assets/video-asmr.jpg";
+import handheldImg from "@/assets/video-handheld.jpg";
+import slowMotionImg from "@/assets/video-slow-motion.jpg";
+import splitScreenImg from "@/assets/video-split-screen.jpg";
+import timelapseImg from "@/assets/video-timelapse.jpg";
+import lightingImg from "@/assets/video-lighting.jpg";
+import montageImg from "@/assets/video-montage.jpg";
 
 interface VideoTypeStepProps {
   videoType: string;
@@ -13,14 +21,14 @@ interface VideoTypeStepProps {
 }
 
 const videoTypes = [
-  "一鏡到底",
-  "ASMR風格",
-  "手持紀錄感",
-  "慢動作氛圍",
-  "Split Screen 分割畫面",
-  "延遲攝影",
-  "光影敘事",
-  "蒙太奇剪接"
+  { id: "one-take", label: "一鏡到底", image: oneTakeImg },
+  { id: "asmr", label: "ASMR風格", image: asmrImg },
+  { id: "handheld", label: "手持紀錄感", image: handheldImg },
+  { id: "slow-motion", label: "慢動作氛圍", image: slowMotionImg },
+  { id: "split-screen", label: "Split Screen 分割畫面", image: splitScreenImg },
+  { id: "timelapse", label: "延遲攝影", image: timelapseImg },
+  { id: "lighting", label: "光影敘事", image: lightingImg },
+  { id: "montage", label: "蒙太奇剪接", image: montageImg },
 ];
 
 const VideoTypeStep = ({ 
@@ -41,18 +49,25 @@ const VideoTypeStep = ({
         <div className="space-y-6">
           <div>
             <Label className="text-base font-semibold mb-3 block">影片類型</Label>
-            <div className="flex flex-wrap gap-3">
+            <div className="grid grid-cols-4 gap-4">
               {videoTypes.map((type) => (
                 <button
-                  key={type}
-                  onClick={() => onVideoTypeChange(type)}
-                  className={`px-4 py-2 rounded-md border-2 transition-colors ${
-                    videoType === type
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-card/80 text-foreground border-primary/30 hover:border-primary hover:bg-primary/5"
+                  key={type.id}
+                  onClick={() => onVideoTypeChange(type.id)}
+                  className={`relative rounded-lg overflow-hidden transition-all ${
+                    videoType === type.id
+                      ? "ring-4 ring-primary scale-105"
+                      : "hover:scale-102 hover:ring-2 hover:ring-primary/50"
                   }`}
                 >
-                  {type}
+                  <img
+                    src={type.image}
+                    alt={type.label}
+                    className="w-full h-32 object-cover"
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-2">
+                    <p className="text-white text-sm font-medium text-center">{type.label}</p>
+                  </div>
                 </button>
               ))}
             </div>
@@ -79,7 +94,7 @@ const VideoTypeStep = ({
             <Button 
               onClick={onNext}
               className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-base font-medium"
-              disabled={!videoType || !targetPlatform.trim()}
+              disabled={!videoType.trim() || !targetPlatform.trim()}
             >
               下一題 →
             </Button>
