@@ -13,10 +13,14 @@ interface VideoTypeStepProps {
 }
 
 const videoTypes = [
-  "品牌形象",
-  "活動紀錄", 
-  "動畫影片 (16:9)",
-  "短影音 (9:16)"
+  "一鏡到底",
+  "ASMR風格",
+  "手持紀錄感",
+  "慢動作氛圍",
+  "Split Screen 分割畫面",
+  "延遲攝影",
+  "光影敘事",
+  "蒙太奇剪接"
 ];
 
 const VideoTypeStep = ({ 
