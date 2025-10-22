@@ -98,10 +98,10 @@ export default {
         },
         "tech-pulse": {
           "0%, 100%": {
-            boxShadow: "0 0 5px hsl(261 75% 55% / 0.3)"
+            boxShadow: "0 0 5px hsl(227 86% 31% / 0.3)"
           },
           "50%": {
-            boxShadow: "0 0 20px hsl(261 75% 55% / 0.8), 0 0 30px hsl(261 75% 55% / 0.4)"
+            boxShadow: "0 0 20px hsl(227 86% 31% / 0.8), 0 0 30px hsl(227 86% 31% / 0.4)"
           }
         }
       },

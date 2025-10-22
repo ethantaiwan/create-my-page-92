@@ -8,7 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 248 252 255;
+    --background: 220 43% 97%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -17,38 +17,38 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 261 75% 55%;
+    --primary: 227 86% 31%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 248 100% 98%;
-    --secondary-foreground: 261 25% 25%;
+    --secondary: 220 43% 97%;
+    --secondary-foreground: 227 50% 20%;
 
-    --muted: 248 100% 96%;
-    --muted-foreground: 261 15% 55%;
+    --muted: 220 43% 95%;
+    --muted-foreground: 227 30% 45%;
 
-    --accent: 261 75% 55%;
+    --accent: 227 86% 31%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 248 75% 90%;
-    --input: 248 75% 92%;
-    --ring: 261 75% 55%;
+    --border: 220 43% 90%;
+    --input: 220 43% 92%;
+    --ring: 227 86% 31%;
     
     /* Custom design tokens for tech blue video script generator */
-    --header-bg: linear-gradient(135deg, hsl(261 85% 45%) 0%, hsl(261 90% 35%) 50%, hsl(261 95% 25%) 100%);
-    --step-active: 261 75% 55%;
-    --step-inactive: 248 45% 85%;
+    --header-bg: linear-gradient(135deg, hsl(227 90% 35%) 0%, hsl(227 90% 28%) 50%, hsl(227 90% 22%) 100%);
+    --step-active: 227 86% 31%;
+    --step-inactive: 220 43% 85%;
     --step-text: 0 0% 100%;
-    --card-shadow: 0 8px 25px -5px hsl(261 75% 55% / 0.15);
-    --gradient-bg: linear-gradient(135deg, hsl(248 100% 99%) 0%, hsl(248 85% 96%) 30%, hsl(261 25% 92%) 100%);
-    --footer-bg: linear-gradient(135deg, hsl(261 85% 25%) 0%, hsl(261 90% 20%) 50%, hsl(261 95% 15%) 100%);
+    --card-shadow: 0 8px 25px -5px hsl(227 86% 31% / 0.15);
+    --gradient-bg: linear-gradient(135deg, hsl(220 43% 99%) 0%, hsl(220 43% 96%) 30%, hsl(220 30% 92%) 100%);
+    --footer-bg: linear-gradient(135deg, hsl(227 90% 22%) 0%, hsl(227 90% 18%) 50%, hsl(227 90% 14%) 100%);
     
     /* Tech animations and effects */
-    --tech-glow: 0 0 20px hsl(261 75% 55% / 0.4);
-    --tech-pulse-primary: hsl(261 75% 55%);
-    --tech-pulse-secondary: hsl(248 85% 65%);
+    --tech-glow: 0 0 20px hsl(227 86% 31% / 0.4);
+    --tech-pulse-primary: hsl(227 86% 31%);
+    --tech-pulse-secondary: hsl(227 70% 50%);
 
     --radius: 0.5rem;
 
@@ -128,7 +128,7 @@ All colors MUST be HSL.
       transform: scale(1);
     }
     50% { 
-      text-shadow: 0 0 30px hsl(261 75% 55% / 0.6);
+      text-shadow: 0 0 30px hsl(227 86% 31% / 0.6);
       transform: scale(1.02);
     }
   }
