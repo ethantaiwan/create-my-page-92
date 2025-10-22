@@ -5,6 +5,8 @@ import { CompanyInfoStep } from "@/components/steps/CompanyInfoStep";
 import { VideoTypeStep } from "@/components/steps/VideoTypeStep";
 import { VisualStyleStep } from "@/components/steps/VisualStyleStep";
 import { ScriptGenerationStep } from "@/components/steps/ScriptGenerationStep";
+import { ImageGenerationStep } from "@/components/steps/ImageGenerationStep";
+import { VideoGenerationStep } from "@/components/steps/VideoGenerationStep";
 
 const Index = () => {
   const [currentStep, setCurrentStep] = useState(1);
@@ -21,7 +23,7 @@ const Index = () => {
   };
 
   const nextStep = () => {
-    if (currentStep < 4) {
+    if (currentStep < 6) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -69,6 +71,22 @@ const Index = () => {
           <ScriptGenerationStep
             formData={formData}
             onPrev={prevStep}
+            onNext={nextStep}
+          />
+        );
+      case 5:
+        return (
+          <ImageGenerationStep
+            formData={formData}
+            onPrev={prevStep}
+            onNext={nextStep}
+          />
+        );
+      case 6:
+        return (
+          <VideoGenerationStep
+            formData={formData}
+            onPrev={prevStep}
           />
         );
       default:
@@ -90,7 +108,7 @@ const Index = () => {
         </div>
         <ProgressSteps 
           currentStep={currentStep} 
-          totalSteps={4}
+          totalSteps={6}
           onStepClick={(step) => {
             if (step <= currentStep) {
               setCurrentStep(step);

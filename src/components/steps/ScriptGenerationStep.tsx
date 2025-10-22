@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { RefreshCw, Download } from "lucide-react";
+import { RefreshCw, Download, Image } from "lucide-react";
 
 interface ScriptGenerationStepProps {
   formData: {
@@ -13,9 +13,10 @@ interface ScriptGenerationStepProps {
     videoTechniques: string[];
   };
   onPrev: () => void;
+  onNext: () => void;
 }
 
-const ScriptGenerationStep = ({ formData, onPrev }: ScriptGenerationStepProps) => {
+const ScriptGenerationStep = ({ formData, onPrev, onNext }: ScriptGenerationStepProps) => {
   const [generatedScript, setGeneratedScript] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationCount, setGenerationCount] = useState(0);
@@ -108,11 +109,20 @@ const ScriptGenerationStep = ({ formData, onPrev }: ScriptGenerationStepProps) =
               </Button>
               <Button 
                 onClick={downloadScript}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-base font-medium"
+                variant="outline"
+                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-3 text-base font-medium"
                 disabled={isGenerating || !generatedScript}
               >
                 <Download className="w-4 h-4 mr-2" />
                 下載文字腳本
+              </Button>
+              <Button 
+                onClick={onNext}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-base font-medium"
+                disabled={isGenerating || !generatedScript}
+              >
+                <Image className="w-4 h-4 mr-2" />
+                生成照片
               </Button>
             </div>
           </div>
