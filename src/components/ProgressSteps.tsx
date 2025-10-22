@@ -9,18 +9,20 @@ const steps = [
   { number: 2, label: "影片需求" },
   { number: 3, label: "風格偏好" },
   { number: 4, label: "腳本生成" },
+  { number: 5, label: "圖片生成" },
+  { number: 6, label: "影片生成" },
 ];
 
 const ProgressSteps = ({ currentStep, onStepClick }: ProgressStepsProps) => {
   return (
-    <div className="flex justify-center items-center space-x-8">
+    <div className="flex justify-center items-center space-x-4 md:space-x-6">
       {steps.map((step, index) => (
         <div key={step.number} className="flex items-center">
           <div className="flex flex-col items-center">
             <button
               onClick={() => onStepClick?.(step.number)}
               disabled={step.number > currentStep}
-              className={`w-12 h-12 rounded-full flex items-center justify-center text-white font-bold text-lg transition-all duration-300 hover:scale-110 ${
+              className={`w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center text-white font-bold text-base md:text-lg transition-all duration-300 hover:scale-110 ${
                 step.number <= currentStep
                   ? "bg-step-active cursor-pointer hover:shadow-lg"
                   : "bg-step-inactive text-gray-500 cursor-not-allowed"
@@ -28,7 +30,7 @@ const ProgressSteps = ({ currentStep, onStepClick }: ProgressStepsProps) => {
             >
               {step.number}
             </button>
-            <span className={`text-sm mt-2 font-medium transition-all duration-500 ${
+            <span className={`text-xs md:text-sm mt-2 font-medium transition-all duration-500 text-center ${
               step.number === currentStep 
                 ? "text-primary animate-fade-in tech-glow" 
                 : "text-foreground"
@@ -38,7 +40,7 @@ const ProgressSteps = ({ currentStep, onStepClick }: ProgressStepsProps) => {
           </div>
           {index < steps.length - 1 && (
             <div
-              className={`w-16 h-1 mx-4 ${
+              className={`w-12 md:w-16 h-1 mx-2 md:mx-4 ${
                 step.number < currentStep
                   ? "bg-step-active"
                   : "bg-step-inactive"
