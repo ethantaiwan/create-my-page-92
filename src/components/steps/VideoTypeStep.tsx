@@ -7,6 +7,9 @@ import asmrImg from "@/assets/video-asmr.jpg";
 import handheldImg from "@/assets/video-handheld.jpg";
 import lightingImg from "@/assets/video-lighting.jpg";
 import montageImg from "@/assets/video-montage.jpg";
+import slowMotionImg from "@/assets/video-slow-motion.jpg";
+import splitScreenImg from "@/assets/video-split-screen.jpg";
+import timelapseImg from "@/assets/video-timelapse.jpg";
 
 interface VideoTypeStepProps {
   videoType: string;
@@ -21,6 +24,9 @@ const videoTypes = [
   { id: "one-take", label: "一鏡到底", image: oneTakeImg },
   { id: "asmr", label: "ASMR風格", image: asmrImg },
   { id: "handheld", label: "手持紀錄感", image: handheldImg },
+  { id: "slow-motion", label: "慢動作攝影", image: slowMotionImg },
+  { id: "split-screen", label: "Split Screen 分割畫面", image: splitScreenImg },
+  { id: "timelapse", label: "延遲攝影", image: timelapseImg },
   { id: "lighting", label: "光影敘事", image: lightingImg },
   { id: "montage", label: "蒙太奇剪接", image: montageImg },
 ];
@@ -43,7 +49,7 @@ const VideoTypeStep = ({
         <div className="space-y-6">
           <div>
             <Label className="text-base font-semibold mb-3 block">影片類型</Label>
-            <div className="grid grid-cols-5 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               {videoTypes.map((type) => (
                 <button
                   key={type.id}
