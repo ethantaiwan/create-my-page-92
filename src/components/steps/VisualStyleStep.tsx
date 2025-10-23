@@ -8,10 +8,10 @@ import paperCutImg from "@/assets/style-paper-cut.jpg";
 
 interface VisualStyleStepProps {
   selectedStyle: string;
-  selectedTechniques: string[];
+  selectedTechnique: string;
   selectedAspectRatio: string;
   onStyleChange: (value: string) => void;
-  onTechniquesChange: (value: string[]) => void;
+  onTechniqueChange: (value: string) => void;
   onAspectRatioChange: (value: string) => void;
   onNext: () => void;
   onPrev: () => void;
@@ -35,22 +35,14 @@ const aspectRatios = [
 
 const VisualStyleStep = ({ 
   selectedStyle, 
-  selectedTechniques,
+  selectedTechnique,
   selectedAspectRatio,
   onStyleChange, 
-  onTechniquesChange,
+  onTechniqueChange,
   onAspectRatioChange,
   onNext,
   onPrev 
 }: VisualStyleStepProps) => {
-  
-  const handleTechniqueToggle = (techniqueId: string) => {
-    if (selectedTechniques.includes(techniqueId)) {
-      onTechniquesChange(selectedTechniques.filter(id => id !== techniqueId));
-    } else {
-      onTechniquesChange([...selectedTechniques, techniqueId]);
-    }
-  };
 
   return (
     <Card className="max-w-6xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
@@ -66,11 +58,11 @@ const VisualStyleStep = ({
               {videoTechniques.map((technique) => (
                 <button
                   key={technique.id}
-                  onClick={() => handleTechniqueToggle(technique.id)}
-                  className={`aspect-[3/2] rounded-lg border-2 transition-colors overflow-hidden relative ${
-                    selectedTechniques.includes(technique.id)
-                      ? "border-primary bg-primary/5"
-                      : "border-primary/30 bg-card/60 hover:border-primary/50 hover:bg-primary/5"
+                  onClick={() => onTechniqueChange(technique.id)}
+                  className={`aspect-[3/2] rounded-lg overflow-hidden relative transition-all ${
+                    selectedTechnique === technique.id
+                      ? "ring-4 ring-primary scale-105"
+                      : "hover:scale-102 hover:ring-2 hover:ring-primary/50"
                   }`}
                 >
                   <img 

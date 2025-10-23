@@ -15,7 +15,7 @@ const Index = () => {
     videoType: "",
     targetPlatform: "",
     visualStyle: "",
-    videoTechniques: [] as string[],
+    videoTechniques: "",
     aspectRatio: "16:9",
   });
 
@@ -60,10 +60,10 @@ const Index = () => {
         return (
           <VisualStyleStep
             selectedStyle={formData.visualStyle}
-            selectedTechniques={formData.videoTechniques}
+            selectedTechnique={formData.videoTechniques}
             selectedAspectRatio={formData.aspectRatio}
             onStyleChange={(value) => updateFormData("visualStyle", value)}
-            onTechniquesChange={(value) => updateFormData("videoTechniques", value)}
+            onTechniqueChange={(value) => updateFormData("videoTechniques", value)}
             onAspectRatioChange={(value) => updateFormData("aspectRatio", value)}
             onNext={nextStep}
             onPrev={prevStep}

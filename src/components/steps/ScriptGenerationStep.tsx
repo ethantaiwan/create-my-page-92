@@ -10,7 +10,7 @@ interface ScriptGenerationStepProps {
     videoType: string;
     targetPlatform: string;
     visualStyle: string;
-    videoTechniques: string[];
+    videoTechniques: string;
   };
   onPrev: () => void;
   onNext: () => void;
