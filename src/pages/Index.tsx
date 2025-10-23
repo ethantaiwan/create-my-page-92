@@ -16,6 +16,7 @@ const Index = () => {
     targetPlatform: "",
     visualStyle: "",
     videoTechniques: [] as string[],
+    aspectRatio: "16:9",
   });
 
   const updateFormData = (key: keyof typeof formData, value: string | string[]) => {
@@ -60,8 +61,10 @@ const Index = () => {
           <VisualStyleStep
             selectedStyle={formData.visualStyle}
             selectedTechniques={formData.videoTechniques}
+            selectedAspectRatio={formData.aspectRatio}
             onStyleChange={(value) => updateFormData("visualStyle", value)}
             onTechniquesChange={(value) => updateFormData("videoTechniques", value)}
+            onAspectRatioChange={(value) => updateFormData("aspectRatio", value)}
             onNext={nextStep}
             onPrev={prevStep}
           />

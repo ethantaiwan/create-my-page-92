@@ -9,8 +9,10 @@ import paperCutImg from "@/assets/style-paper-cut.jpg";
 interface VisualStyleStepProps {
   selectedStyle: string;
   selectedTechniques: string[];
+  selectedAspectRatio: string;
   onStyleChange: (value: string) => void;
   onTechniquesChange: (value: string[]) => void;
+  onAspectRatioChange: (value: string) => void;
   onNext: () => void;
   onPrev: () => void;
 }
@@ -23,11 +25,21 @@ const videoTechniques = [
   { id: "paper-cut", label: "剪紙風格", image: paperCutImg },
 ];
 
+const aspectRatios = [
+  { id: "9:16", label: "9:16" },
+  { id: "16:9", label: "16:9" },
+  { id: "1:1", label: "1:1" },
+  { id: "3:4", label: "3:4" },
+  { id: "4:3", label: "4:3" },
+];
+
 const VisualStyleStep = ({ 
   selectedStyle, 
   selectedTechniques,
+  selectedAspectRatio,
   onStyleChange, 
   onTechniquesChange,
+  onAspectRatioChange,
   onNext,
   onPrev 
 }: VisualStyleStepProps) => {
@@ -69,6 +81,25 @@ const VisualStyleStep = ({
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
                     <span className="text-sm font-medium text-white">{technique.label}</span>
                   </div>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <h3 className="text-lg font-semibold mb-4">生成影片尺寸</h3>
+            <div className="flex justify-center gap-4">
+              {aspectRatios.map((ratio) => (
+                <button
+                  key={ratio.id}
+                  onClick={() => onAspectRatioChange(ratio.id)}
+                  className={`px-8 py-3 rounded-full border-2 transition-all duration-300 font-medium ${
+                    selectedAspectRatio === ratio.id
+                      ? "border-primary bg-primary text-primary-foreground shadow-lg scale-105"
+                      : "border-primary/30 bg-card/60 text-foreground hover:border-primary/50 hover:bg-primary/5 hover:scale-105"
+                  }`}
+                >
+                  {ratio.label}
                 </button>
               ))}
             </div>
