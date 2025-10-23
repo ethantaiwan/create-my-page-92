@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import realisticPhotoImg from "@/assets/style-realistic-photo.jpg";
+import realisticPhotoImg from "@/assets/style-realistic-photo-new.png";
 import animation3dImg from "@/assets/style-3d-animation.jpg";
 import japaneseHanddrawnImg from "@/assets/style-japanese-handdrawn.jpg";
 import clayAnimationImg from "@/assets/style-clay-animation.jpg";
