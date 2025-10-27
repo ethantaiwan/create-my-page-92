@@ -150,7 +150,6 @@ const VisualStyleStep = ({
     }
   };
  
-
   return (
     <Card className="max-w-6xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
       <CardContent className="p-8">
