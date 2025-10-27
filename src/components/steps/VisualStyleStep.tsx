@@ -110,7 +110,7 @@ const VisualStyleStep = ({
         }
 
         const data = await response.json();
-        
+        console.log(data.result)
         // ----------------------------------------------------
         // 【格式修正：只從 data.result 獲取字串內容】
         // ----------------------------------------------------
