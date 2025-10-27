@@ -61,7 +61,8 @@ const VisualStyleStep = ({
   // <-- 新增: 處理載入和錯誤狀態
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const selectedVisual = videoTechniques.find((tech) => tech.id === selectedTechnique);
+  const visualStyleLabel = selectedVisual ? selectedVisual.label : selectedTechnique;
   // <-- 新增: 處理腳本生成服務的呼叫
   const handleGenerateScript = async () => {
     // 檢查是否有選取風格和尺寸
@@ -74,16 +75,17 @@ const VisualStyleStep = ({
     setError(null);
 
     const payload = {
-      brand: "最愛安妮",
-      topic: "如何表白",
-      video_type: "一鏡到底",
-      platform: "IG",
-      aspect_ratio: "9:16",
-      visual_style: "寫實照片風格",
+      brand: brand, 
+      topic: topic,
+      video_type: videoType,
+      platform: platform,
+      aspect_ratio: selectedAspectRatio,
+      visual_style: visualStyleLabel,
       tone: "自然、溫暖、貼近日常口語", // 固定參數
     };
-
-    const API_URL = "https://dyscriptgenerator.onrender.com/generate-script";
+    console.log("--- 最終 API Payload 準備傳送 ---");
+    console.log(payload);
+    console.log("--------------------------------");    const API_URL = "https://dyscriptgenerator.onrender.com/generate-script";
 
     try {
         const response = await fetch(API_URL, {
