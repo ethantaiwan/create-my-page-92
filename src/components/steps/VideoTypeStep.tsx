@@ -2,7 +2,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
-// ... (所有圖片導入保持不變) ...
+import oneTakeImg from "@/assets/video-one-take.jpg";
+import asmrImg from "@/assets/video-asmr.jpg";
+import handheldImg from "@/assets/video-handheld.jpg";
+import lightingImg from "@/assets/video-lighting.jpg";
+import montageImg from "@/assets/video-montage.jpg";
+import slowMotionImg from "@/assets/video-slow-motion.jpg";
+import splitScreenImg from "@/assets/video-split-screen.jpg";
+import timelapseImg from "@/assets/video-timelapse.jpg";
+
 
 interface VideoTypeStepProps {
   videoType: string;
