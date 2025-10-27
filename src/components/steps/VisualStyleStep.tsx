@@ -64,13 +64,12 @@ const VisualStyleStep = ({
 
   // <-- 新增: 處理腳本生成服務的呼叫
   const handleGenerateScript = async () => {
-    // 檢查是否有選取風格和尺寸 (保留，確保基本邏輯)
+    // 檢查是否有選取風格和尺寸
     if (!selectedTechnique || !selectedAspectRatio) {
         setError("請務必選擇視覺風格與影片尺寸。");
         return;
     }
 
-    // 將 isGenerating 狀態和 error 狀態的設定移到 try 區塊外
     setIsGenerating(true);
     setError(null);
 
@@ -81,7 +80,7 @@ const VisualStyleStep = ({
       platform: "IG",
       aspect_ratio: "9:16",
       visual_style: "寫實照片風格",
-      tone: "自然、溫暖、貼近日常口語",
+      tone: "自然、溫暖、貼近日常口語", // 固定參數
     };
 
     const API_URL = "https://dyscriptgenerator.onrender.com/generate-script";
@@ -108,15 +107,22 @@ const VisualStyleStep = ({
 
             throw new Error(`HTTP 錯誤! ${errorDetail}`);
         }
+
         const data = await response.json();
-        console.log(data.result)
+        
+        // =======================================================
+        // 【新增日誌點】: 輸出 data.result 到控制台
+        // =======================================================
+        console.log("API 成功回傳的 data.result 內容:", data.result);
+        // =======================================================
+        
         // ----------------------------------------------------
-        // 【格式修正：只從 data.result 獲取字串內容】
+        // 格式修正：只從 data.result 獲取字串內容
         // ----------------------------------------------------
         const scriptContent = data && data.result;
 
     } catch (e) {
-        // 【執行錯誤修正：安全地處理錯誤物件】
+        // 執行錯誤修正：安全地處理錯誤物件
         const errorMessage = (e instanceof Error) ? e.message : String(e);
         console.error("腳本生成失敗:", e);
         setError(`腳本生成失敗: ${errorMessage}。請檢查網路或稍後再試。`);
@@ -125,7 +131,6 @@ const VisualStyleStep = ({
         setIsGenerating(false);
     }
 };
-
   return (
     <Card className="max-w-6xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
       <CardContent className="p-8">
