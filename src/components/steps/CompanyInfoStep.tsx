@@ -18,12 +18,17 @@ const CompanyInfoStep = ({ value, onChange, onNext }: CompanyInfoStepProps) => {
         
         <div className="space-y-4">
           <Textarea
-            placeholder="例：我們是專做天然保健食品的品牌，販售益生菌產品。"
-            value={value}
+            placeholder="例：我們是專做天然保健食品的品牌"
+            value={Brandvalue}
             onChange={(e) => onChange(e.target.value)}
             className="min-h-[300px] text-base resize-none border border-dashed border-primary/30 focus:border-dashed focus:border-primary/30 bg-card/80"
           />
-          
+          <Textarea
+            placeholder="例：販售益生菌產品。"
+            value={Topicvalue}
+            onChange={(e) => onChange(e.target.value)}
+            className="min-h-[300px] text-base resize-none border border-dashed border-primary/30 focus:border-dashed focus:border-primary/30 bg-card/80"
+          />
           <div className="flex justify-end">
             <Button 
               onClick={onNext}
