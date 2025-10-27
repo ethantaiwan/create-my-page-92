@@ -42,8 +42,10 @@ const aspectRatios = [
   { id: "3:4", label: "3:4" },
   { id: "4:3", label: "4:3" },
 ];
-
-const VisualStyleStep = ({ 
+const selectedVisual = videoTechniques.find(
+      (tech) => tech.id === selectedTechnique
+    );
+    const visualStyleLabel = selectedVisual ? selectedVisual.label : "";
   selectedStyle, 
   selectedTechnique,
   selectedAspectRatio,
@@ -79,7 +81,7 @@ const VisualStyleStep = ({
       video_type: "一鏡到底",
       platform: "IG",
       aspect_ratio: "9:16",
-      visual_style: "寫實照片風格",
+      visual_style: visualStyleLabel,
       tone: "自然、溫暖、貼近日常口語", // 固定參數
     };
 
@@ -113,6 +115,7 @@ const VisualStyleStep = ({
         // =======================================================
         // 【新增日誌點】: 輸出 data.result 到控制台
         // =======================================================
+        console.log(visualStyleLabel)
         console.log("API 成功回傳的 data.result 內容:", data.result);
         // =======================================================
         
