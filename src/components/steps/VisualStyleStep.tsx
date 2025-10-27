@@ -65,6 +65,7 @@ const VisualStyleStep = ({
   // <-- 新增: 處理腳本生成服務的呼叫
   const handleGenerateScript = async () => {
     // 檢查是否有選取風格和尺寸
+    // 注意：您目前使用寫死參數，但在最終版本需要確保這些檢查適用於動態參數
     if (!selectedTechnique || !selectedAspectRatio) {
         setError("請務必選擇視覺風格與影片尺寸。");
         return;
@@ -111,11 +112,35 @@ const VisualStyleStep = ({
 
       const data = await response.json();
       
+      // ----------------------------------------------------
+      // 【關鍵修正區塊】 - 嘗試多個可能的鍵名
+      // ----------------------------------------------------
+      let scriptContent = null;
+      
       if (data && data.script) {
-        onScriptGenerated(data.script); 
-      } else {
-        throw new Error("API 回應未包含腳本內容。");
+          scriptContent = data.script;
+      } else if (data && data.script_content) {
+          // 嘗試常見的替代鍵名，例如 'script_content'
+          scriptContent = data.script_content;
+      } else if (data && data.result) {
+          // 如果腳本被嵌套在 'result' 或其他鍵下
+          scriptContent = data.result;
       }
+
+      if (scriptContent) {
+        // 確保提取到的內容不是空字串
+        if (typeof scriptContent === 'string' && scriptContent.trim() !== '') {
+             onScriptGenerated(scriptContent); 
+        } else {
+             console.error("API 回應結構確認：", data);
+             throw new Error("API 成功回應，但腳本內容為空。");
+        }
+      } else {
+        // 如果所有嘗試都失敗，將整個回應印出來供除錯
+        console.error("API 回應結構確認：", data); 
+        throw new Error("API 回應未包含預期的腳本內容鍵（例如 'script'）。請查看控制台輸出確認正確鍵名。");
+      }
+      // ----------------------------------------------------
       
     } catch (e: any) {
       console.error("腳本生成失敗:", e);
@@ -124,6 +149,7 @@ const VisualStyleStep = ({
       setIsGenerating(false);
     }
   };
+ 
 
   return (
     <Card className="max-w-6xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
