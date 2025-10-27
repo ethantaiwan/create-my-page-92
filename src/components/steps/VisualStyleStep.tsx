@@ -74,12 +74,12 @@ const VisualStyleStep = ({
     setError(null);
 
     const payload = {
-      brand: brand,
-      topic: topic,
-      video_type: videoType,
-      platform: platform,
-      aspect_ratio: selectedAspectRatio,
-      visual_style: selectedTechnique,
+      brand: "最愛安妮",
+      topic: "如何表白",
+      video_type: "one-take",
+      platform: "IG",
+      aspect_ratio: "9:16",
+      visual_style: "realistic-photo",
       tone: "自然、溫暖、貼近日常口語", // 固定參數
     };
 
