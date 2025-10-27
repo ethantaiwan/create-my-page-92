@@ -20,7 +20,7 @@ const Index = () => {
         targetPlatform: "",
         visualStyle: "",
         videoTechniques: "",
-        aspectRatio: "16:9",
+        aspectRatio: "",
     });
 
     const [generatedScript, setGeneratedScript] = useState<string | null>(null); 
@@ -61,10 +61,9 @@ const handleScriptGeneration = async (payload) => {
     // ----------------------------------------------------
     // 關鍵修正：確保跳轉和載入狀態是第一個被執行的狀態更新
     // ----------------------------------------------------
-    setGeneratedScript(null); 
     setIsScriptGenerating(true);
     setCurrentStep(4); // 🎯 確保跳轉排隊
-
+    setGeneratedScript(null); 
     try {
         const response = await fetch(API_URL, {
             method: 'POST',
