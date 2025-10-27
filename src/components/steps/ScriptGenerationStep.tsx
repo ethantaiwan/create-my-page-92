@@ -1,63 +1,59 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
-import { RefreshCw, Download, Image } from "lucide-react";
+// ... (其他引入保持不變)
 
 interface ScriptGenerationStepProps {
-  formData: {
-    companyInfo: string;
-    videoType: string;
-    targetPlatform: string;
-    visualStyle: string;
-    videoTechniques: string;
-  };
+  scriptContent: string | null; // <-- 允許 null，表示內容尚未載入
   onPrev: () => void;
   onNext: () => void;
+  isInitialLoading: boolean; // <-- 新增：從父元件接收初始載入狀態
 }
 
-const ScriptGenerationStep = ({ formData, onPrev, onNext }: ScriptGenerationStepProps) => {
-  const [generatedScript, setGeneratedScript] = useState("");
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generationCount, setGenerationCount] = useState(0);
-
-  const generateScript = () => {
-    setIsGenerating(true);
+const ScriptGenerationStep = ({ 
+  scriptContent, 
+  onPrev, 
+  onNext,
+  isInitialLoading // <-- 接收初始載入狀態
+}: ScriptGenerationStepProps) => {
     
-    // Simulate AI generation delay
+  // 內部狀態：用於用戶編輯腳本
+  const [editableScript, setEditableScript] = useState(scriptContent || "");
+  // 載入狀態：初始載入狀態由父元件控制
+  const [isGenerating, setIsGenerating] = useState(isInitialLoading); 
+  const [generationCount, setGenerationCount] = useState(0); 
+
+  // 使用 useEffect 監聽父元件傳來的腳本內容變化
+  useEffect(() => {
+    if (scriptContent !== null && isInitialLoading) {
+        // 如果腳本內容從父元件傳入，表示初始載入完成
+        setEditableScript(scriptContent);
+        setIsGenerating(false);
+    } else if (scriptContent !== null && !isInitialLoading) {
+        // 僅當腳本內容更新，且不是在初始載入時，才更新 editableScript
+        setEditableScript(scriptContent);
+    }
+  }, [scriptContent, isInitialLoading]);
+
+
+  // 重新生成邏輯 (generateScript) 保持不變，但應確保它也更新父元件的狀態
+  const generateScript = () => {
+    // ... 實際應用中，應再次觸發 API 呼叫 ...
+    
+    // 這裡使用模擬：
+    setIsGenerating(true);
     setTimeout(() => {
-      const sampleScript = `這部自動生成的腳本
-要帶給文字輸入框的孩子。
-
-我們每天下午一書
-
-9:16
-
-形象影片
-
-視覺風格: robot
-影像手法: tech9`;
-
-      setGeneratedScript(sampleScript);
+      const regeneratedSample = `這是 AI 重新生成 (第 ${generationCount + 1} 次) 的腳本內容。`;
+      setEditableScript(regeneratedSample); // 更新自己的狀態
       setIsGenerating(false);
       setGenerationCount(prev => prev + 1);
     }, 2000);
   };
+  
+  // ... (downloadScript 保持不變)
 
-  const downloadScript = () => {
-    const element = document.createElement('a');
-    const file = new Blob([generatedScript], { type: 'text/plain' });
-    element.href = URL.createObjectURL(file);
-    element.download = 'video-script.txt';
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
-  };
-
-  useEffect(() => {
-    // Auto-generate script when component mounts
-    generateScript();
-  }, []);
+  // 決定 Textarea 顯示的內容
+  const displayScript = isGenerating 
+    ? "正在生成腳本，請稍候..." 
+    : editableScript;
 
   return (
     <Card className="max-w-4xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
@@ -66,9 +62,7 @@ const ScriptGenerationStep = ({ formData, onPrev, onNext }: ScriptGenerationStep
           影片腳本生成
         </h2>
         
-        <p className="text-center text-muted-foreground mb-8">
-          依據您提供的資訊，AI已為您產生影片腳本。您可以在下方編輯、調整或重新生成腳本內容。
-        </p>
+        {/* ... (其他 UI 保持不變) */}
         
         <div className="space-y-6">
           <Card className="bg-accent/10 border-primary/20">
@@ -80,7 +74,7 @@ const ScriptGenerationStep = ({ formData, onPrev, onNext }: ScriptGenerationStep
                     variant="outline"
                     size="sm"
                     onClick={generateScript}
-                    disabled={isGenerating}
+                    disabled={isGenerating || generationCount >= 3 || editableScript.trim() === ''} // 腳本未載入時禁用
                     className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
                   >
                     <RefreshCw className={`w-4 h-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
@@ -90,8 +84,8 @@ const ScriptGenerationStep = ({ formData, onPrev, onNext }: ScriptGenerationStep
               </div>
               
               <Textarea
-                value={isGenerating ? "正在生成腳本，請稍候..." : generatedScript}
-                onChange={(e) => setGeneratedScript(e.target.value)}
+                value={displayScript} // 使用計算後的 displayScript
+                onChange={(e) => setEditableScript(e.target.value)}
                 className="min-h-[300px] text-base resize-none border border-dashed border-primary/30 focus:border-dashed focus:border-primary/30 bg-card/80"
                 disabled={isGenerating}
               />
@@ -100,26 +94,11 @@ const ScriptGenerationStep = ({ formData, onPrev, onNext }: ScriptGenerationStep
           
           <div className="flex justify-center">
             <div className="flex space-x-4">
-              <Button 
-                variant="outline"
-                onClick={onPrev}
-                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-3 text-base font-medium"
-              >
-                ← 上一步
-              </Button>
-              <Button 
-                onClick={downloadScript}
-                variant="outline"
-                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-3 text-base font-medium"
-                disabled={isGenerating || !generatedScript}
-              >
-                <Download className="w-4 h-4 mr-2" />
-                下載文字腳本
-              </Button>
+              {/* ... (按鈕邏輯：確保腳本載入完畢才可點擊) */}
               <Button 
                 onClick={onNext}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-base font-medium"
-                disabled={isGenerating || !generatedScript}
+                disabled={isGenerating || !editableScript}
               >
                 <Image className="w-4 h-4 mr-2" />
                 生成照片
@@ -133,4 +112,3 @@ const ScriptGenerationStep = ({ formData, onPrev, onNext }: ScriptGenerationStep
 };
 
 export { ScriptGenerationStep };
-
