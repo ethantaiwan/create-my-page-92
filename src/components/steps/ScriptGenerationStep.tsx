@@ -4,41 +4,41 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { RefreshCw, Download, Image } from "lucide-react";
 
+// 1. 修改 Props 介面：移除 formData，新增 scriptContent
 interface ScriptGenerationStepProps {
-  formData: {
-    companyInfo: string;
-    videoType: string;
-    targetPlatform: string;
-    visualStyle: string;
-    videoTechniques: string;
-  };
+  scriptContent: string; // <-- 新增：接收已生成的腳本字串
   onPrev: () => void;
   onNext: () => void;
 }
 
-const ScriptGenerationStep = ({ formData, onPrev, onNext }: ScriptGenerationStepProps) => {
-  const [generatedScript, setGeneratedScript] = useState("");
+const ScriptGenerationStep = ({ 
+  scriptContent, // <-- 解構賦值以接收 scriptContent
+  onPrev, 
+  onNext 
+}: ScriptGenerationStepProps) => {
+    
+  // 2. 使用傳入的 scriptContent 初始化狀態
+  // 將 isGenerating 初始值設為 false，因為腳本已經生成
+  const [generatedScript, setGeneratedScript] = useState(scriptContent);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generationCount, setGenerationCount] = useState(0);
+  
+  // 由於是重新生成，這裡的計數器可以保留，但初始值設為 0
+  const [generationCount, setGenerationCount] = useState(0); 
 
+  // ⚠️ 注意：原 generateScript 函數保留但需要修改其內容
+  // 在真實應用中，點擊「重新生成」按鈕應該再次呼叫 AI API，
+  // 這裡為了讓程式碼可運行，使用模擬內容。
   const generateScript = () => {
+    // ⚠️ 實際應用中，這裡應是再次呼叫 API
     setIsGenerating(true);
     
     // Simulate AI generation delay
     setTimeout(() => {
-      const sampleScript = `這部自動生成的腳本
-要帶給文字輸入框的孩子。
+      // 替換為重新生成的模擬腳本 (或再次呼叫您的 AI 服務)
+      const regeneratedSample = `這是 AI 重新生成 (第 ${generationCount + 1} 次) 的腳本內容。
+新的視覺風格、新的描述...請在此填入重新呼叫 API 取得的結果。`;
 
-我們每天下午一書
-
-9:16
-
-形象影片
-
-視覺風格: robot
-影像手法: tech9`;
-
-      setGeneratedScript(sampleScript);
+      setGeneratedScript(regeneratedSample);
       setIsGenerating(false);
       setGenerationCount(prev => prev + 1);
     }, 2000);
@@ -54,10 +54,8 @@ const ScriptGenerationStep = ({ formData, onPrev, onNext }: ScriptGenerationStep
     document.body.removeChild(element);
   };
 
-  useEffect(() => {
-    // Auto-generate script when component mounts
-    generateScript();
-  }, []);
+  // 移除 useEffect(() => { generateScript(); }, []); 
+  // 因為腳本已經由上一步傳入並初始化了狀態，不需要自動生成。
 
   return (
     <Card className="max-w-4xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
@@ -80,7 +78,7 @@ const ScriptGenerationStep = ({ formData, onPrev, onNext }: ScriptGenerationStep
                     variant="outline"
                     size="sm"
                     onClick={generateScript}
-                    disabled={isGenerating}
+                    disabled={isGenerating || generationCount >= 3} // 限制重新生成次數
                     className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
                   >
                     <RefreshCw className={`w-4 h-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
@@ -90,6 +88,7 @@ const ScriptGenerationStep = ({ formData, onPrev, onNext }: ScriptGenerationStep
               </div>
               
               <Textarea
+                // 顯示 loading 狀態或已生成的腳本
                 value={isGenerating ? "正在生成腳本，請稍候..." : generatedScript}
                 onChange={(e) => setGeneratedScript(e.target.value)}
                 className="min-h-[300px] text-base resize-none border border-dashed border-primary/30 focus:border-dashed focus:border-primary/30 bg-card/80"
