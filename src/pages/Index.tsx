@@ -54,48 +54,53 @@ const Index = () => {
     // ----------------------------------------------------
     //  核心 API 處理函數
     // ----------------------------------------------------
-    const handleScriptGeneration = async (payload) => {
-        
-        setGeneratedScript(null); // 清空舊的腳本結果
-        setIsScriptGenerating(true);
-        setCurrentStep(4); // 立即跳轉到載入畫面
+    // Index.jsx 內的 handleScriptGeneration 函數
 
-        try {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
+const handleScriptGeneration = async (payload) => {
+    
+    // ----------------------------------------------------
+    // 關鍵修正：確保跳轉和載入狀態是第一個被執行的狀態更新
+    // ----------------------------------------------------
+    setGeneratedScript(null); 
+    setIsScriptGenerating(true);
+    setCurrentStep(4); // 🎯 確保跳轉排隊
 
-            if (!response.ok) {
-                let errorDetail = `狀態碼: ${response.status}`;
-                try {
-                    const errorData = await response.json();
-                    if (errorData && errorData.detail) {
-                        errorDetail += ` (詳情: ${JSON.stringify(errorData.detail)})`;
-                    }
-                } catch (e) { /* 忽略解析錯誤 */ }
-                
-                throw new Error(`HTTP 錯誤! ${errorDetail}`);
-            }
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+        });
 
-            const data = await response.json();
+        if (!response.ok) {
+            let errorDetail = `狀態碼: ${response.status}`;
+            try {
+                const errorData = await response.json();
+                if (errorData && errorData.detail) {
+                    errorDetail += ` (詳情: ${JSON.stringify(errorData.detail)})`;
+                }
+            } catch (e) { /* 忽略 */ }
             
-            if (data && data.result) {
-                setGeneratedScript(data.result); 
-            } else {
-                throw new Error("API 回應未包含預期的 'result' 鍵。");
-            }
-
-        } catch (e) {
-            console.error("生成腳本失敗:", e);
-            const errorMessage = (e instanceof Error) ? e.message : String(e);
-            setGeneratedScript(`腳本生成失敗：${errorMessage}`);
-            
-        } finally {
-            setIsScriptGenerating(false);
+            throw new Error(`HTTP 錯誤! ${errorDetail}`);
         }
-    };
+
+        const data = await response.json();
+        
+        if (data && data.result) {
+            setGeneratedScript(data.result); 
+        } else {
+            throw new Error("API 回應未包含預期的 'result' 鍵。");
+        }
+
+    } catch (e) {
+        console.error("生成腳本失敗:", e);
+        const errorMessage = (e instanceof Error) ? e.message : String(e);
+        setGeneratedScript(`腳本生成失敗：${errorMessage}`);
+        
+    } finally {
+        setIsScriptGenerating(false);
+    }
+};
 
     // ----------------------------------------------------
     //  渲染邏輯
