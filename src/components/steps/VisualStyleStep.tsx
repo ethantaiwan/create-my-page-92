@@ -116,19 +116,6 @@ const VisualStyleStep = ({
         // ----------------------------------------------------
         const scriptContent = data && data.result;
 
-        if (scriptContent) {
-            // 由於 API 回傳的是字串，我們只需要檢查它是否為非空字串
-            if (typeof scriptContent === 'string' && scriptContent.trim() !== '') {
-                onScriptGenerated(scriptContent);
-            } else {
-                console.error("API 回應結構確認：", data);
-                throw new Error("API 成功回應，但腳本內容為空或非字串格式。");
-            }
-        } else {
-            console.error("API 回應結構確認：", data);
-            throw new Error("API 回應未包含預期的 'result' 鍵。");
-        }
-
     } catch (e) {
         // 【執行錯誤修正：安全地處理錯誤物件】
         const errorMessage = (e instanceof Error) ? e.message : String(e);
