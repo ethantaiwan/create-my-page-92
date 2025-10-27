@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from 'react'; // <-- 新增: 引入 useState
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import realisticPhotoImg from "@/assets/style-realistic-photo-new.png";
@@ -7,7 +7,6 @@ import japaneseHanddrawnImg from "@/assets/style-japanese-handdrawn.jpg";
 import clayAnimationImg from "@/assets/style-clay-animation.jpg";
 import paperCutImg from "@/assets/style-paper-cut.jpg";
 
-// 1. 修改 Props 介面以適應新的流程
 interface VisualStyleStepProps {
   selectedStyle: string;
   selectedTechnique: string;
@@ -15,28 +14,17 @@ interface VisualStyleStepProps {
   onStyleChange: (value: string) => void;
   onTechniqueChange: (value: string) => void;
   onAspectRatioChange: (value: string) => void;
+  // onNext: () => void; // 已移除，功能被 onScriptGenerated 取代
   onPrev: () => void;
 
-  // 接收來自前一個步驟的資料
+  // <-- 新增: 來自前一個步驟的資料
   brand: string;
   topic: string;
-  videoType: string;
+  videoType: string; // 對應 API 參數 "video_type"
   platform: string;
 
-  // <-- 替換原有的 onScriptGenerated，新增 onGenerateScript 函數
-  // 這個函數將負責在父元件中觸發 API 呼叫和頁面跳轉
-  onGenerateScript: (payload: {
-    brand: string;
-    topic: string;
-    video_type: string;
-    platform: string;
-    aspect_ratio: string;
-    visual_style: string;
-    tone: string;
-  }) => void;
-  
-  // 由於特效由父元件控制，我們需要知道是否正在生成中
-  isGenerating: boolean;
+  // <-- 新增: 處理腳本生成成功後的回調函數 (用於跳轉到 ScriptGenerationStep.tsx)
+  onScriptGenerated: (scriptContent: string) => void;
 }
 
 const videoTechniques = [
@@ -63,44 +51,81 @@ const VisualStyleStep = ({
   onTechniqueChange,
   onAspectRatioChange,
   onPrev,
-  brand, 
-  topic, 
-  videoType, 
-  platform, 
-  onGenerateScript, // <-- 使用新的 prop
-  isGenerating // <-- 從父元件接收載入狀態
+  brand, // <-- 新增
+  topic, // <-- 新增
+  videoType, // <-- 新增
+  platform, // <-- 新增
+  onScriptGenerated, // <-- 新增
 }: VisualStyleStepProps) => {
 
-  // 移除元件內部的 isGenerating 和 error 狀態，讓父元件管理
+  // <-- 新增: 處理載入和錯誤狀態
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // 2. 修改 handleGenerateScript：只構建 payload 並呼叫父元件函數
-  const handleGenerateScript = () => {
-    // 檢查是否有選取風格和尺寸
+  // <-- 新增: 處理腳本生成服務的呼叫
+  const handleGenerateScript = async () => {
+    // 檢查是否有選取風格和尺寸 (保留，確保基本邏輯)
     if (!selectedTechnique || !selectedAspectRatio) {
-      alert("請務必選擇視覺風格與影片尺寸。"); 
-      return;
+        setError("請務必選擇視覺風格與影片尺寸。");
+        return;
     }
 
-    // 獲取中文 Label (確保格式正確)
-    const selectedVisual = videoTechniques.find((tech) => tech.id === selectedTechnique);
-    // 檢查 selectedVisual 是否存在，不存在則使用 ID，避免 undefined
-    const visualStyleLabel = selectedVisual ? selectedVisual.label : selectedTechnique; 
+    // 將 isGenerating 狀態和 error 狀態的設定移到 try 區塊外
+    setIsGenerating(true);
+    setError(null);
 
-    // 構建 Payload (使用傳入的動態參數，這裡的寫死參數應被移除)
     const payload = {
-        // 替換成動態參數
-        brand: brand, 
-        topic: topic,
-        video_type: videoType,
-        platform: platform,
-        aspect_ratio: selectedAspectRatio,
-        visual_style: visualStyleLabel, 
-        tone: "自然、溫暖、貼近日常口語",
+      brand: "最愛安妮",
+      topic: "如何表白",
+      video_type: "一鏡到底",
+      platform: "IG",
+      aspect_ratio: "9:16",
+      visual_style: "寫實照片風格",
+      tone: "自然、溫暖、貼近日常口語",
     };
 
-    // 呼叫父元件函數，觸發 API 呼叫和頁面跳轉
-    onGenerateScript(payload);
-  };
+    const API_URL = "https://dyscriptgenerator.onrender.com/generate-script";
+
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            let errorDetail = `狀態碼: ${response.status}`;
+            try {
+                const errorData = await response.json();
+                if (errorData && errorData.detail) {
+                    errorDetail += `\n詳情: ${JSON.stringify(errorData.detail)}`;
+                }
+            } catch (e) {
+                console.error("無法解析錯誤響應體:", e);
+            }
+
+            throw new Error(`HTTP 錯誤! ${errorDetail}`);
+        }
+        const data = await response.json();
+        setGeneratedScript(script);
+        console.log(data.result)
+        // ----------------------------------------------------
+        // 【格式修正：只從 data.result 獲取字串內容】
+        // ----------------------------------------------------
+        const scriptContent = data && data.result;
+
+    } catch (e) {
+        // 【執行錯誤修正：安全地處理錯誤物件】
+        const errorMessage = (e instanceof Error) ? e.message : String(e);
+        console.error("腳本生成失敗:", e);
+        setError(`腳本生成失敗: ${errorMessage}。請檢查網路或稍後再試。`);
+    } finally {
+        // 將 finally 放在最外層，確保無論如何都會執行
+        setIsGenerating(false);
+    }
+};
 
   return (
     <Card className="max-w-6xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
@@ -109,7 +134,12 @@ const VisualStyleStep = ({
           Q3. 請選擇希望影片呈現的風格與影像手法？
         </h2>
         
-        {/* 錯誤訊息：如果父元件需要傳遞錯誤訊息，需要在 props 中新增 */}
+        {/* 新增: 錯誤訊息顯示 */}
+        {error && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-center">
+                {error}
+            </div>
+        )}
         
         <div className="space-y-8">
           <div>
@@ -165,7 +195,7 @@ const VisualStyleStep = ({
             >
               ← 上一步
             </Button>
-            {/* 呼叫新的處理函數，並使用父元件傳來的 isGenerating 狀態 */}
+            {/* 修改: 呼叫新的腳本生成函數，並禁用按鈕以顯示載入狀態 */}
             <Button 
               onClick={handleGenerateScript}
               disabled={isGenerating}
@@ -181,3 +211,5 @@ const VisualStyleStep = ({
 };
 
 export { VisualStyleStep };
+
+
