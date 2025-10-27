@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
-import { Label } from "@/components/ui/label"; // 假設您有 Label 元件
+import { Label } from "@/components/ui/label"; // 確保此 Label 導入路徑正確
 
 // 1. 修改 Props 介面：接收和傳遞 brand 與 topic
 interface CompanyInfoStepProps {
-  brand: string; // 接收品牌值
-  topic: string; // 接收主題/產品值
+  brand: string; 
+  topic: string; 
   
   // 修改 onChange 函數，使其傳遞一個包含 brand 和 topic 的物件
   onChange: (data: { brand: string; topic: string }) => void;
@@ -16,14 +16,14 @@ interface CompanyInfoStepProps {
 
 const CompanyInfoStep = ({ brand, topic, onChange, onNext }: CompanyInfoStepProps) => {
   
-  // 內部狀態用於處理輸入框的即時變化
-  const [currentBrand, setCurrentBrand] = useState(brand);
-  const [currentTopic, setCurrentTopic] = useState(topic);
+  // 確保初始狀態安全地從 props 載入 (防止 undefined)
+  const [currentBrand, setCurrentBrand] = useState(brand || "");
+  const [currentTopic, setCurrentTopic] = useState(topic || "");
 
-  // 確保當外部 props 改變時 (例如用戶點擊上一步回來)，內部狀態同步
+  // 當外部 props 改變時 (例如用戶點擊上一步回來)，同步內部狀態
   useEffect(() => {
-    setCurrentBrand(brand);
-    setCurrentTopic(topic);
+    setCurrentBrand(brand || "");
+    setCurrentTopic(topic || "");
   }, [brand, topic]);
 
   // 處理 Brand 輸入框的變化
@@ -86,7 +86,7 @@ const CompanyInfoStep = ({ brand, topic, onChange, onNext }: CompanyInfoStepProp
             <Button 
               onClick={onNext}
               className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-base font-medium"
-              disabled={isButtonDisabled} // 兩個欄位都必須有內容
+              disabled={isButtonDisabled}
             >
               下一題 →
             </Button>
