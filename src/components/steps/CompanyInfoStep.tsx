@@ -61,7 +61,7 @@ const CompanyInfoStep = ({ brand, topic, onChange, onNext }: CompanyInfoStepProp
             </Label>
             <Textarea
               id="brand-input"
-              placeholder="例：最愛安妮"
+              placeholder="例：喜樂生醫"
               value={currentBrand}
               onChange={handleBrandChange}
               className="min-h-[100px] text-base resize-none border border-dashed border-primary/30 focus:border-dashed focus:border-primary/30 bg-card/80"
