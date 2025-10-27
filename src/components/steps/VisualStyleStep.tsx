@@ -109,7 +109,6 @@ const VisualStyleStep = ({
             throw new Error(`HTTP 錯誤! ${errorDetail}`);
         }
         const data = await response.json();
-        setGeneratedScript(script);
         console.log(data.result)
         // ----------------------------------------------------
         // 【格式修正：只從 data.result 獲取字串內容】
