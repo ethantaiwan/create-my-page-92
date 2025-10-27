@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; // <-- 新增: 引入 useState
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import realisticPhotoImg from "@/assets/style-realistic-photo-new.png";
@@ -14,17 +14,26 @@ interface VisualStyleStepProps {
   onStyleChange: (value: string) => void;
   onTechniqueChange: (value: string) => void;
   onAspectRatioChange: (value: string) => void;
-  // onNext: () => void; // 已移除，功能被 onScriptGenerated 取代
   onPrev: () => void;
 
-  // <-- 新增: 來自前一個步驟的資料
   brand: string;
   topic: string;
-  videoType: string; // 對應 API 參數 "video_type"
+  videoType: string;
   platform: string;
 
-  // <-- 新增: 處理腳本生成成功後的回調函數 (用於跳轉到 ScriptGenerationStep.tsx)
-  onScriptGenerated: (scriptContent: string) => void;
+  // ✅ 改成由父層處理 API 與跳轉
+  onGenerateScript: (payload: {
+    brand: string;
+    topic: string;
+    video_type: string;
+    platform: string;
+    aspect_ratio: string;
+    visual_style: string;
+    tone: string;
+  }) => void;
+
+  // ✅ 由父層告知目前是否在呼叫 API
+  isGenerating: boolean;
 }
 
 const videoTechniques = [
@@ -43,110 +52,62 @@ const aspectRatios = [
   { id: "4:3", label: "4:3" },
 ];
 
-const VisualStyleStep = ({ 
-  selectedStyle, 
+const VisualStyleStep = ({
+  selectedStyle,
   selectedTechnique,
   selectedAspectRatio,
-  onStyleChange, 
+  onStyleChange,
   onTechniqueChange,
   onAspectRatioChange,
   onPrev,
-  brand, // <-- 新增
-  topic, // <-- 新增
-  videoType, // <-- 新增
-  platform, // <-- 新增
-  onScriptGenerated, // <-- 新增
+  brand,
+  topic,
+  videoType,
+  platform,
+  onGenerateScript,   // ✅ 用這個
+  isGenerating,       // ✅ 父層控制 loading
 }: VisualStyleStepProps) => {
-
-  // <-- 新增: 處理載入和錯誤狀態
-  const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const selectedVisual = videoTechniques.find((tech) => tech.id === selectedTechnique);
-  const visualStyleLabel = selectedVisual ? selectedVisual.label : selectedTechnique;
-  // <-- 新增: 處理腳本生成服務的呼叫
-  const handleGenerateScript = async () => {
-    // 檢查是否有選取風格和尺寸
-    if (!selectedTechnique || !selectedAspectRatio) {
-        setError("請務必選擇視覺風格與影片尺寸。");
-        return;
-    }
 
-    setIsGenerating(true);
+  const selectedVisual = videoTechniques.find((t) => t.id === selectedTechnique);
+  const visualStyleLabel = selectedVisual ? selectedVisual.label : selectedTechnique;
+
+  const handleGenerateScript = () => {
+    if (!selectedTechnique || !selectedAspectRatio) {
+      setError("請務必選擇視覺風格與影片尺寸。");
+      return;
+    }
     setError(null);
 
     const payload = {
-      brand: brand, 
-      topic: topic,
+      brand,
+      topic,
       video_type: videoType,
-      platform: platform,
+      platform,
       aspect_ratio: selectedAspectRatio,
       visual_style: visualStyleLabel,
-      tone: "自然、溫暖、貼近日常口語", // 固定參數
+      tone: "自然、溫暖、貼近日常口語",
     };
-    console.log("--- 最終 API Payload 準備傳送 ---");
-    console.log(payload);
-    console.log("--------------------------------");    const API_URL = "https://dyscriptgenerator.onrender.com/generate-script";
 
-    try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload),
-        });
+    console.log("[VisualStyleStep] 送給父層的 payload:", payload);
 
-        if (!response.ok) {
-            let errorDetail = `狀態碼: ${response.status}`;
-            try {
-                const errorData = await response.json();
-                if (errorData && errorData.detail) {
-                    errorDetail += `\n詳情: ${JSON.stringify(errorData.detail)}`;
-                }
-            } catch (e) {
-                console.error("無法解析錯誤響應體:", e);
-            }
+    // ✅ 把工作交給父層（父層會：切到 Step 4、打 API、把結果塞進 ScriptGenerationStep）
+    onGenerateScript(payload);
+  };
 
-            throw new Error(`HTTP 錯誤! ${errorDetail}`);
-        }
-
-        const data = await response.json();
-        
-        // =======================================================
-        // 【新增日誌點】: 輸出 data.result 到控制台
-        // =======================================================
-        console.log("API 成功回傳的 data.result 內容:", data.result);
-        // =======================================================
-        
-        // ----------------------------------------------------
-        // 格式修正：只從 data.result 獲取字串內容
-        // ----------------------------------------------------
-        const scriptContent = data && data.result;
-
-    } catch (e) {
-        // 執行錯誤修正：安全地處理錯誤物件
-        const errorMessage = (e instanceof Error) ? e.message : String(e);
-        console.error("腳本生成失敗:", e);
-        setError(`腳本生成失敗: ${errorMessage}。請檢查網路或稍後再試。`);
-    } finally {
-        // 將 finally 放在最外層，確保無論如何都會執行
-        setIsGenerating(false);
-    }
-};
   return (
     <Card className="max-w-6xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
       <CardContent className="p-8">
         <h2 className="text-xl font-semibold text-primary mb-6 text-center">
           Q3. 請選擇希望影片呈現的風格與影像手法？
         </h2>
-        
-        {/* 新增: 錯誤訊息顯示 */}
+
         {error && (
-            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-center">
-                {error}
-            </div>
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-center">
+            {error}
+          </div>
         )}
-        
+
         <div className="space-y-8">
           <div>
             <h3 className="text-lg font-semibold mb-4">視覺風格</h3>
@@ -161,11 +122,7 @@ const VisualStyleStep = ({
                       : "hover:scale-102 hover:ring-2 hover:ring-primary/50"
                   }`}
                 >
-                  <img 
-                    src={technique.image} 
-                    alt={technique.label}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={technique.image} alt={technique.label} className="w-full h-full object-cover" />
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-2">
                     <span className="text-sm font-medium text-white">{technique.label}</span>
                   </div>
@@ -192,17 +149,16 @@ const VisualStyleStep = ({
               ))}
             </div>
           </div>
-          
+
           <div className="flex justify-between">
-            <Button 
+            <Button
               variant="outline"
               onClick={onPrev}
               className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-3 text-base font-medium"
             >
               ← 上一步
             </Button>
-            {/* 修改: 呼叫新的腳本生成函數，並禁用按鈕以顯示載入狀態 */}
-            <Button 
+            <Button
               onClick={handleGenerateScript}
               disabled={isGenerating}
               className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-base font-medium"
@@ -217,6 +173,3 @@ const VisualStyleStep = ({
 };
 
 export { VisualStyleStep };
-
-
-
