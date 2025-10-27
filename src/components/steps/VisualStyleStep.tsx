@@ -1,3 +1,4 @@
+import React, { useState } from 'react'; // <-- 新增: 引入 useState
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import realisticPhotoImg from "@/assets/style-realistic-photo-new.png";
@@ -13,8 +14,17 @@ interface VisualStyleStepProps {
   onStyleChange: (value: string) => void;
   onTechniqueChange: (value: string) => void;
   onAspectRatioChange: (value: string) => void;
-  onNext: () => void;
+  // onNext: () => void; // 已移除，功能被 onScriptGenerated 取代
   onPrev: () => void;
+
+  // <-- 新增: 來自前一個步驟的資料
+  brand: string;
+  topic: string;
+  videoType: string; // 對應 API 參數 "video_type"
+  platform: string;
+
+  // <-- 新增: 處理腳本生成成功後的回調函數 (用於跳轉到 ScriptGenerationStep.tsx)
+  onScriptGenerated: (scriptContent: string) => void;
 }
 
 const videoTechniques = [
@@ -40,9 +50,72 @@ const VisualStyleStep = ({
   onStyleChange, 
   onTechniqueChange,
   onAspectRatioChange,
-  onNext,
-  onPrev 
+  onPrev,
+  brand, // <-- 新增
+  topic, // <-- 新增
+  videoType, // <-- 新增
+  platform, // <-- 新增
+  onScriptGenerated, // <-- 新增
 }: VisualStyleStepProps) => {
+
+  // <-- 新增: 處理載入和錯誤狀態
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // <-- 新增: 處理腳本生成服務的呼叫
+  const handleGenerateScript = async () => {
+    // 檢查是否有選取風格和尺寸
+    if (!selectedTechnique || !selectedAspectRatio) {
+        setError("請務必選擇視覺風格與影片尺寸。");
+        return;
+    }
+
+    setIsGenerating(true);
+    setError(null);
+
+    const payload = {
+      brand: brand,
+      topic: topic,
+      video_type: videoType,
+      platform: platform,
+      aspect_ratio: selectedAspectRatio,
+      visual_style: selectedTechnique,
+      tone: "自然、溫暖、貼近日常口語", // 固定參數
+    };
+
+    const API_URL = "https://dyscriptgenerator.onrender.com/generate-script";
+
+    try {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP 錯誤! 狀態碼: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // 假設 API 回傳的腳本內容在 'script' 欄位中
+      if (data && data.script) {
+        // 呼叫父組件傳入的函數，將腳本內容傳遞回去，並觸發頁面跳轉
+        onScriptGenerated(data.script); 
+      } else {
+        throw new Error("API 回應未包含腳本內容。");
+      }
+      
+    } catch (e: any) {
+      console.error("腳本生成失敗:", e);
+      setError(`腳本生成失敗: ${e.message}。請檢查網路或稍後再試。`);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
 
   return (
     <Card className="max-w-6xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
@@ -50,6 +123,13 @@ const VisualStyleStep = ({
         <h2 className="text-xl font-semibold text-primary mb-6 text-center">
           Q3. 請選擇希望影片呈現的風格與影像手法？
         </h2>
+        
+        {/* 新增: 錯誤訊息顯示 */}
+        {error && (
+            <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded text-center">
+                {error}
+            </div>
+        )}
         
         <div className="space-y-8">
           <div>
@@ -105,11 +185,13 @@ const VisualStyleStep = ({
             >
               ← 上一步
             </Button>
+            {/* 修改: 呼叫新的腳本生成函數，並禁用按鈕以顯示載入狀態 */}
             <Button 
-              onClick={onNext}
+              onClick={handleGenerateScript}
+              disabled={isGenerating}
               className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-base font-medium"
             >
-              生成腳本
+              {isGenerating ? "生成中..." : "生成腳本"}
             </Button>
           </div>
         </div>
@@ -119,4 +201,3 @@ const VisualStyleStep = ({
 };
 
 export { VisualStyleStep };
-
