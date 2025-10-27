@@ -140,16 +140,19 @@ const VisualStyleStep = ({
         console.error("API 回應結構確認：", data); 
         throw new Error("API 回應未包含預期的腳本內容鍵（例如 'script'）。請查看控制台輸出確認正確鍵名。");
       }
-      // ----------------------------------------------------
-      
-    } catch (e: any) {
-      console.error("腳本生成失敗:", e);
-      setError(`腳本生成失敗: ${e.message}。請檢查網路或稍後再試。`);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
- 
+    } catch (e) { // 移除 :any 讓 TypeScript 更好地推斷
+        
+        const errorMessage = (e instanceof Error) ? e.message : String(e);
+
+        console.error("腳本生成失敗:", e);
+        
+        // 使用我們安全提取的訊息
+        setError(`腳本生成失敗: ${errorMessage}。請檢查網路或稍後再試。`);
+      
+    } finally {
+      setIsGenerating(false);
+    }
+  };
   return (
     <Card className="max-w-6xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
       <CardContent className="p-8">
