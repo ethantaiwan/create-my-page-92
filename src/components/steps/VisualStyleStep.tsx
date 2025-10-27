@@ -76,10 +76,10 @@ const VisualStyleStep = ({
     const payload = {
       brand: "最愛安妮",
       topic: "如何表白",
-      video_type: "one-take",
+      video_type: "一鏡到底",
       platform: "IG",
       aspect_ratio: "9:16",
-      visual_style: "realistic-photo",
+      visual_style: "寫實照片風格",
       tone: "自然、溫暖、貼近日常口語", // 固定參數
     };
 
@@ -95,14 +95,23 @@ const VisualStyleStep = ({
       });
 
       if (!response.ok) {
-        throw new Error(`HTTP 錯誤! 狀態碼: ${response.status}`);
+        let errorDetail = `狀態碼: ${response.status}`;
+        try {
+            const errorData = await response.json(); 
+            // 嘗試讀取後端返回的詳細驗證錯誤
+            if (errorData && errorData.detail) { 
+                errorDetail += `\n詳情: ${JSON.stringify(errorData.detail)}`;
+            }
+        } catch (e) {
+            console.error("無法解析錯誤響應體:", e);
+        }
+        
+        throw new Error(`HTTP 錯誤! ${errorDetail}`);
       }
 
       const data = await response.json();
       
-      // 假設 API 回傳的腳本內容在 'script' 欄位中
       if (data && data.script) {
-        // 呼叫父組件傳入的函數，將腳本內容傳遞回去，並觸發頁面跳轉
         onScriptGenerated(data.script); 
       } else {
         throw new Error("API 回應未包含腳本內容。");
@@ -115,7 +124,6 @@ const VisualStyleStep = ({
       setIsGenerating(false);
     }
   };
-
 
   return (
     <Card className="max-w-6xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
