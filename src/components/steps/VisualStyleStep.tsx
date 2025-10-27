@@ -64,12 +64,13 @@ const VisualStyleStep = ({
 
   // <-- 新增: 處理腳本生成服務的呼叫
   const handleGenerateScript = async () => {
-    // 檢查是否有選取風格和尺寸
+    // 檢查是否有選取風格和尺寸 (保留，確保基本邏輯)
     if (!selectedTechnique || !selectedAspectRatio) {
         setError("請務必選擇視覺風格與影片尺寸。");
         return;
     }
 
+    // 將 isGenerating 狀態和 error 狀態的設定移到 try 區塊外
     setIsGenerating(true);
     setError(null);
 
@@ -80,80 +81,63 @@ const VisualStyleStep = ({
       platform: "IG",
       aspect_ratio: "9:16",
       visual_style: "寫實照片風格",
-      tone: "自然、溫暖、貼近日常口語", // 固定參數
+      tone: "自然、溫暖、貼近日常口語",
     };
 
     const API_URL = "https://dyscriptgenerator.onrender.com/generate-script";
 
-    // ------------------------------------------------------------------
-    // 【最終修正：使用 IIFE 隔離作用域，解決 'd is not a function' 錯誤】
-    // ------------------------------------------------------------------
-    await (async () => {
-        try {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(payload),
-            });
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(payload),
+        });
 
-            if (!response.ok) {
-                let errorDetail = `狀態碼: ${response.status}`;
-                try {
-                    const errorData = await response.json(); 
-                    if (errorData && errorData.detail) { 
-                        errorDetail += `\n詳情: ${JSON.stringify(errorData.detail)}`;
-                    }
-                } catch (e) {
-                    console.error("無法解析錯誤響應體:", e);
+        if (!response.ok) {
+            let errorDetail = `狀態碼: ${response.status}`;
+            try {
+                const errorData = await response.json();
+                if (errorData && errorData.detail) {
+                    errorDetail += `\n詳情: ${JSON.stringify(errorData.detail)}`;
                 }
-                
-                throw new Error(`HTTP 錯誤! ${errorDetail}`);
+            } catch (e) {
+                console.error("無法解析錯誤響應體:", e);
             }
 
-            const data = await response.json();
-            
-            let scriptContent = null;
-            
-            // 嘗試多個可能的鍵名
-            if (data && data.script) {
-                scriptContent = data.script;
-            } else if (data && data.script_content) {
-                scriptContent = data.script_content;
-            } else if (data && data.result) {
-                // 如果 data.result 是物件，可能需要進一步取值，先保持原樣
-                scriptContent = data.result; 
-            }
-
-            if (scriptContent) {
-                // 確保提取到的內容是字串且不為空
-                // 如果 scriptContent 是物件，這個檢查會失敗，請確認 API 回應
-                if (typeof scriptContent === 'string' && scriptContent.trim() !== '') {
-                    onScriptGenerated(scriptContent); 
-                } else {
-                    console.error("API 回應結構確認：", data);
-                    throw new Error("API 成功回應，但腳本內容為空或格式錯誤。");
-                }
-            } else {
-                console.error("API 回應結構確認：", data); 
-                throw new Error("API 回應未包含預期的腳本內容鍵（例如 'script'）。請查看控制台輸出確認正確鍵名。");
-            }
-        } catch (e) {
-            // 由於 IIFE 內的 await，這裡的 e 依然需要處理
-            const errorMessage = (e instanceof Error) ? e.message : String(e);
-
-            console.error("腳本生成失敗:", e);
-            
-            // 由於我們在 IIFE 內，必須手動呼叫外部的 setError
-            // 這裡不再拋出錯誤，而是直接設定外部狀態
-            setError(`腳本生成失敗: ${errorMessage}。請檢查網路或稍後再試。`);
+            throw new Error(`HTTP 錯誤! ${errorDetail}`);
         }
-    })();
-    // ------------------------------------------------------------------
 
-    // finally 區塊：無論 IIFE 成功或失敗，都會執行
-    setIsGenerating(false);
+        const data = await response.json();
+        
+        // ----------------------------------------------------
+        // 【格式修正：只從 data.result 獲取字串內容】
+        // ----------------------------------------------------
+        const scriptContent = data && data.result;
+
+        if (scriptContent) {
+            // 由於 API 回傳的是字串，我們只需要檢查它是否為非空字串
+            if (typeof scriptContent === 'string' && scriptContent.trim() !== '') {
+                onScriptGenerated(scriptContent);
+            } else {
+                console.error("API 回應結構確認：", data);
+                throw new Error("API 成功回應，但腳本內容為空或非字串格式。");
+            }
+        } else {
+            console.error("API 回應結構確認：", data);
+            throw new Error("API 回應未包含預期的 'result' 鍵。");
+        }
+
+    } catch (e) {
+        // 【執行錯誤修正：安全地處理錯誤物件】
+        const errorMessage = (e instanceof Error) ? e.message : String(e);
+        console.error("腳本生成失敗:", e);
+        setError(`腳本生成失敗: ${errorMessage}。請檢查網路或稍後再試。`);
+    } finally {
+        // 將 finally 放在最外層，確保無論如何都會執行
+        setIsGenerating(false);
+    }
 };
 
   return (
