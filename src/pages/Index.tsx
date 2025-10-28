@@ -56,51 +56,6 @@ const Index = () => {
     // ----------------------------------------------------
     // Index.jsx 內的 handleScriptGeneration 函數
 
-const handleScriptGeneration = async (payload) => {
-    
-    // ----------------------------------------------------
-    // 關鍵修正：確保跳轉和載入狀態是第一個被執行的狀態更新
-    // ----------------------------------------------------
-    setIsScriptGenerating(true);
-    setCurrentStep(4); // 🎯 確保跳轉排隊
-    setGeneratedScript(null); 
-    try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-        });
-
-        if (!response.ok) {
-            let errorDetail = `狀態碼: ${response.status}`;
-            try {
-                const errorData = await response.json();
-                if (errorData && errorData.detail) {
-                    errorDetail += ` (詳情: ${JSON.stringify(errorData.detail)})`;
-                }
-            } catch (e) { /* 忽略 */ }
-            
-            throw new Error(`HTTP 錯誤! ${errorDetail}`);
-        }
-
-        const data = await response.json();
-        
-        if (data && data.result) {
-            setGeneratedScript(data.result); 
-        } else {
-            throw new Error("API 回應未包含預期的 'result' 鍵。");
-        }
-
-    } catch (e) {
-        console.error("生成腳本失敗:", e);
-        const errorMessage = (e instanceof Error) ? e.message : String(e);
-        setGeneratedScript(`腳本生成失敗：${errorMessage}`);
-        
-    } finally {
-        setIsScriptGenerating(false);
-    }
-};
-
     // ----------------------------------------------------
     //  渲染邏輯
     // ----------------------------------------------------
@@ -129,34 +84,35 @@ const handleScriptGeneration = async (payload) => {
                         onPrev={prevStep}
                     />
                 );
-            case 3:
+             case 3:
                 return (
-                    // 【傳遞給 VisualStyleStep 的 Props】
                     <VisualStyleStep
-                        selectedStyle={formData.visualStyle}
-                        selectedTechnique={formData.videoTechniques}
-                        selectedAspectRatio={formData.aspectRatio}
-                        onStyleChange={(value) => updateFormData("visualStyle", value)}
-                        onTechniqueChange={(value) => updateFormData("videoTechniques", value)}
-                        onAspectRatioChange={(value) => updateFormData("aspectRatio", value)}
+                        // ... 其他 props 保持不變 ...
+                        
+                        // 恢復標準跳轉
+                        onNext={nextStep} 
                         onPrev={prevStep}
                         
-                        // 直接傳遞獨立的 brand 和 topic
-                        brand={formData.brand}
-                        topic={formData.topic}
-                        videoType={formData.videoType}
-                        platform={formData.targetPlatform} 
-                        
-                        onGenerateScript={handleScriptGeneration} // 觸發 API 
-                        isGenerating={isScriptGenerating}
+                        // 刪除不再需要的 API 相關 props
+                        // brand={formData.brand}
+                        // topic={formData.topic}
+                        // videoType={formData.videoType}
+                        // platform={formData.targetPlatform}
+                        // onGenerateScript={handleScriptGeneration}
+                        // isGenerating={isScriptGenerating}
                     />
                 );
             case 4:
                 return (
-                    // 【傳遞給 ScriptGenerationStep 的 Props】
                     <ScriptGenerationStep
-                        scriptContent={generatedScript} // 腳本內容
-                        isInitialLoading={isScriptGenerating} // 載入狀態
+                        // 將所有 API 呼叫所需的參數都傳給它
+                        brand={formData.brand}
+                        topic={formData.topic}
+                        videoType={formData.videoType}
+                        platform={formData.targetPlatform}
+                        aspectRatio={formData.aspectRatio}
+                        visualStyle={formData.videoTechniques}
+                        
                         onPrev={prevStep}
                         onNext={nextStep}
                     />
