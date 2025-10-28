@@ -79,9 +79,15 @@ const ScriptGenerationStep = ({
 
   const downloadScript = () => { /* ... (保持不變) ... */ };
 
-  const displayScript = isGenerating 
-    ? "正在生成腳本，請稍候..." 
-    : generatedScript;
+  const downloadScript = () => {
+    const element = document.createElement('a');
+    const file = new Blob([generatedScript], { type: 'text/plain' });
+    element.href = URL.createObjectURL(file);
+    element.download = 'video-script.txt';
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+};
   return (
     <Card className="max-w-4xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
       <CardContent className="p-8">
