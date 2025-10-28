@@ -1,4 +1,4 @@
-import React, { useState } from 'react'; // <-- 新增: 引入 useState
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import realisticPhotoImg from "@/assets/style-realistic-photo-new.png";
@@ -14,16 +14,14 @@ interface VisualStyleStepProps {
   onStyleChange: (value: string) => void;
   onTechniqueChange: (value: string) => void;
   onAspectRatioChange: (value: string) => void;
-  // onNext: () => void; // 已移除，功能被 onScriptGenerated 取代
   onPrev: () => void;
 
-  // <-- 新增: 來自前一個步驟的資料
   brand: string;
   topic: string;
-  videoType: string; // 對應 API 參數 "video_type"
+  videoType: string;
   platform: string;
 
-  // <-- 新增: 處理腳本生成成功後的回調函數 (用於跳轉到 ScriptGenerationStep.tsx)
+  // 成功後，由父元件 (Index) 提供的跳轉和數據儲存函數
   onScriptGenerated: (scriptContent: string) => void;
 }
 
@@ -51,24 +49,32 @@ const VisualStyleStep = ({
   onTechniqueChange,
   onAspectRatioChange,
   onPrev,
-  brand, // <-- 新增
-  topic, // <-- 新增
-  videoType, // <-- 新增
-  platform, // <-- 新增
-  onScriptGenerated, // <-- 新增
+  brand, 
+  topic, 
+  videoType, 
+  platform, 
+  onScriptGenerated, // 成功後的跳轉函數
 }: VisualStyleStepProps) => {
 
-  // <-- 新增: 處理載入和錯誤狀態
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // 確保 visualStyleLabel 的計算不會在元件頂層引起副作用
   const selectedVisual = videoTechniques.find((tech) => tech.id === selectedTechnique);
   const visualStyleLabel = selectedVisual ? selectedVisual.label : selectedTechnique;
-  // <-- 新增: 處理腳本生成服務的呼叫
+
+  // <-- 處理腳本生成服務的呼叫
   const handleGenerateScript = async () => {
     // 檢查是否有選取風格和尺寸
     if (!selectedTechnique || !selectedAspectRatio) {
-        setError("請務必選擇視覺風格與影片尺寸。");
-        return;
+      setError("請務必選擇視覺風格與影片尺寸。");
+      return;
+    }
+
+    // 檢查 API 呼叫需要的核心參數是否為空 (安全檢查)
+    if (!brand || !topic || !videoType || !platform) {
+      setError("缺少品牌、主題或平台資訊，請返回上一步。");
+      return;
     }
 
     setIsGenerating(true);
@@ -83,56 +89,63 @@ const VisualStyleStep = ({
       visual_style: visualStyleLabel,
       tone: "自然、溫暖、貼近日常口語", // 固定參數
     };
+    
     console.log("--- 最終 API Payload 準備傳送 ---");
     console.log(payload);
-    console.log("--------------------------------");    const API_URL = "https://dyscriptgenerator.onrender.com/generate-script";
+    console.log("--------------------------------");
+    
+    const API_URL = "https://dyscriptgenerator.onrender.com/generate-script";
 
     try {
-        const response = await fetch(API_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload),
-        });
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
 
-        if (!response.ok) {
-            let errorDetail = `狀態碼: ${response.status}`;
-            try {
-                const errorData = await response.json();
-                if (errorData && errorData.detail) {
-                    errorDetail += `\n詳情: ${JSON.stringify(errorData.detail)}`;
-                }
-            } catch (e) {
-                console.error("無法解析錯誤響應體:", e);
-            }
-
-            throw new Error(`HTTP 錯誤! ${errorDetail}`);
+      if (!response.ok) {
+        let errorDetail = `狀態碼: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          if (errorData && errorData.detail) {
+            errorDetail += ` (詳情: ${JSON.stringify(errorData.detail)})`;
+          }
+        } catch (e) {
+          console.error("無法解析錯誤響應體:", e);
         }
 
-        const data = await response.json();
-        
-        // =======================================================
-        // 【新增日誌點】: 輸出 data.result 到控制台
-        // =======================================================
-        console.log("API 成功回傳的 data.result 內容:", data.result);
-        // =======================================================
-        
-        // ----------------------------------------------------
-        // 格式修正：只從 data.result 獲取字串內容
-        // ----------------------------------------------------
-        const scriptContent = data && data.result;
+        throw new Error(`HTTP 錯誤! ${errorDetail}`);
+      }
 
-    } catch (e) {
-        // 執行錯誤修正：安全地處理錯誤物件
-        const errorMessage = (e instanceof Error) ? e.message : String(e);
-        console.error("腳本生成失敗:", e);
-        setError(`腳本生成失敗: ${errorMessage}。請檢查網路或稍後再試。`);
+      const data = await response.json();
+      
+      console.log("API 成功回傳的 data.result 內容:", data.result);
+      
+      // ----------------------------------------------------
+      // 格式修正：只從 data.result 獲取字串內容並檢查
+      // ----------------------------------------------------
+      const scriptContent = data && data.result;
+
+      if (typeof scriptContent === 'string' && scriptContent.trim() !== '') {
+        // 成功獲取腳本內容後，呼叫父元件的跳轉函數
+        onScriptGenerated(scriptContent); // 👈 觸發跳轉
+      } else {
+        throw new Error("API 回應未包含預期的腳本內容（result 鍵為空）。");
+      }
+
+    } catch (e: any) {
+      // 執行錯誤修正：安全地處理錯誤物件
+      const errorMessage = (e instanceof Error) ? e.message : String(e);
+      console.error("腳本生成失敗:", e);
+      setError(`腳本生成失敗: ${errorMessage}。請檢查網路或稍後再試。`);
     } finally {
-        // 將 finally 放在最外層，確保無論如何都會執行
-        setIsGenerating(false);
+      // 將 finally 放在最外層，確保無論如何都會執行
+      setIsGenerating(false);
     }
-};
+  };
+
   return (
     <Card className="max-w-6xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
       <CardContent className="p-8">
@@ -201,10 +214,9 @@ const VisualStyleStep = ({
             >
               ← 上一步
             </Button>
-            {/* 修改: 呼叫新的腳本生成函數，並禁用按鈕以顯示載入狀態 */}
             <Button 
-              onClick={handleGenerateScript}
-              disabled={isGenerating}
+              onClick={handleGenerateScript} // 點擊按鈕執行 API 呼叫
+              disabled={isGenerating || !selectedTechnique || !selectedAspectRatio} // 確保填寫完整才可點擊
               className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-base font-medium"
             >
               {isGenerating ? "生成中..." : "生成腳本"}
@@ -217,5 +229,3 @@ const VisualStyleStep = ({
 };
 
 export { VisualStyleStep };
-
-
