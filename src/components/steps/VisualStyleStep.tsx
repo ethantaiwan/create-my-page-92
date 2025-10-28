@@ -1,6 +1,4 @@
-// VisualStyleStep.tsx
-
-import React from 'react'; // 移除 useState 導入
+import React from 'react'; // 確保只導入 React
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import realisticPhotoImg from "@/assets/style-realistic-photo-new.png";
@@ -9,7 +7,7 @@ import japaneseHanddrawnImg from "@/assets/style-japanese-handdrawn.jpg";
 import clayAnimationImg from "@/assets/style-clay-animation.jpg";
 import paperCutImg from "@/assets/style-paper-cut.jpg";
 
-// 1. 修正 Props 介面：只包含狀態和標準跳轉
+// 1. 修正 Props 介面：只包含狀態和標準跳轉（與 Index.jsx 的簡化流程一致）
 interface VisualStyleStepProps {
   selectedStyle: string;
   selectedTechnique: string;
@@ -22,12 +20,12 @@ interface VisualStyleStepProps {
   onNext: () => void; 
   onPrev: () => void;
 
-  // 移除所有 API 相關的 props
+  // 移除所有 API 相關的 Props，否則它們會接收到 undefined 導致崩潰
   // brand: string;
   // topic: string;
   // videoType: string;
   // platform: string;
-  // onScriptGenerated: (scriptContent: string) => void; 
+  // onScriptGenerated: (scriptContent: string) => void;
 }
 
 const videoTechniques = [
@@ -57,14 +55,9 @@ const VisualStyleStep = ({
   onNext // <-- 接收 onNext
 }: VisualStyleStepProps) => {
 
-  // 移除所有 useState 狀態
-  // const [isGenerating, setIsGenerating] = useState(false);
-  // const [error, setError] = useState<string | null>(null);
-
-  // 移除 handleGenerateScript 函數
-
   // 確保所有必要項目都被選中，用於按鈕禁用
-  const isFormValid = selectedTechnique.trim() !== "" && selectedAspectRatio.trim() !== "";
+  // 這裡使用安全的空字串檢查，避免 .trim() 在 undefined 上執行
+  const isFormValid = (selectedTechnique || "").trim() !== "" && (selectedAspectRatio || "").trim() !== "";
 
   return (
     <Card className="max-w-6xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
@@ -73,8 +66,6 @@ const VisualStyleStep = ({
           Q3. 請選擇希望影片呈現的風格與影像手法？
         </h2>
         
-        {/* 移除錯誤訊息顯示 */}
-        
         <div className="space-y-8">
           <div>
             <h3 className="text-lg font-semibold mb-4">視覺風格</h3>
@@ -82,8 +73,7 @@ const VisualStyleStep = ({
               {videoTechniques.map((technique) => (
                 <button
                   key={technique.id}
-                  // 點擊選項呼叫 onTechniqueChange，這是 Index.jsx 的 updateFormData
-                  onClick={() => onTechniqueChange(technique.id)} 
+                  onClick={() => onTechniqueChange(technique.id)}
                   className={`aspect-[3/2] rounded-lg overflow-hidden relative transition-all ${
                     selectedTechnique === technique.id
                       ? "ring-4 ring-primary scale-105"
@@ -109,7 +99,6 @@ const VisualStyleStep = ({
               {aspectRatios.map((ratio) => (
                 <button
                   key={ratio.id}
-                  // 點擊選項呼叫 onAspectRatioChange，這是 Index.jsx 的 updateFormData
                   onClick={() => onAspectRatioChange(ratio.id)}
                   className={`px-8 py-3 rounded-full border-2 transition-all duration-300 font-medium ${
                     selectedAspectRatio === ratio.id
@@ -131,10 +120,10 @@ const VisualStyleStep = ({
             >
               ← 上一步
             </Button>
-            {/* 恢復標準的 onNext 跳轉 */}
+            {/* 恢復標準的 onNext 跳轉，並使用安全的禁用邏輯 */}
             <Button 
-              onClick={onNext} // 👈 點擊後直接執行 Index.jsx 的 nextStep
-              disabled={!isFormValid} // 使用新的禁用邏輯
+              onClick={onNext} 
+              disabled={!isFormValid} 
               className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-base font-medium"
             >
               生成腳本
