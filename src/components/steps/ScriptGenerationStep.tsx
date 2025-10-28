@@ -82,11 +82,16 @@ const ScriptGenerationStep = ({
   const displayScript = isGenerating 
     ? "正在生成腳本，請稍候..." 
     : generatedScript;
-
   return (
     <Card className="max-w-4xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
       <CardContent className="p-8">
-        {/* ... (標題和文字保持不變) ... */}
+        <h2 className="text-2xl font-semibold text-foreground mb-2 text-center">
+          影片腳本生成
+        </h2>
+        
+        <p className="text-center text-muted-foreground mb-8">
+          依據您提供的資訊，AI已為您產生影片腳本。您可以在下方編輯、調整或重新生成腳本內容。
+        </p>
         
         <div className="space-y-6">
           <Card className="bg-accent/10 border-primary/20">
@@ -97,8 +102,8 @@ const ScriptGenerationStep = ({
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={generateScript} // 點擊按鈕，再次執行 API
-                    disabled={isGenerating || generationCount >= 3} 
+                    onClick={generateScript}
+                    disabled={isGenerating || (generationCount > 0 && generationCount >= 3)} // 限制重新生成次數
                     className="border-primary text-primary hover:bg-primary hover:text-primary-foreground"
                   >
                     <RefreshCw className={`w-4 h-4 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
@@ -116,12 +121,7 @@ const ScriptGenerationStep = ({
             </CardContent>
           </Card>
           
-          {/* ... (導航按鈕部分保持不變) ... */}
-        </div>
-      </CardContent>
-    </Card>
-
-{/* 【恢復導航按鈕】 */}
+          {/* 【恢復導航按鈕】 */}
           <div className="flex justify-center">
             <div className="flex space-x-4">
               <Button 
