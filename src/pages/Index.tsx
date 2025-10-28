@@ -84,14 +84,22 @@ const Index = () => {
                         onPrev={prevStep}
                     />
                 );
-             case 3:
-                return (
-                    <VisualStyleStep
-                        // ... 其他 props 保持不變 ...
-                        
-                        // 恢復標準跳轉
-                        onNext={nextStep} 
-                        onPrev={prevStep}
+            case 3:
+                return (
+                    <VisualStyleStep
+                        // 只需要傳遞狀態和跳轉函數
+                        selectedStyle={formData.visualStyle}
+                        selectedTechnique={formData.videoTechniques}
+                        selectedAspectRatio={formData.aspectRatio}
+                        onStyleChange={(value) => updateFormData("visualStyle", value)}
+                        onTechniqueChange={(value) => updateFormData("videoTechniques", value)}
+                        onAspectRatioChange={(value) => updateFormData("aspectRatio", value)}
+                        
+                        // 恢復標準跳轉
+                        onNext={nextStep} // <--- 關鍵：使用 onNext
+                        onPrev={prevStep}
+                    />
+                );
                         
                         // 刪除不再需要的 API 相關 props
                         // brand={formData.brand}
@@ -100,8 +108,7 @@ const Index = () => {
                         // platform={formData.targetPlatform}
                         // onGenerateScript={handleScriptGeneration}
                         // isGenerating={isScriptGenerating}
-                    />
-                );
+               
             case 4:
                 return (
                     <ScriptGenerationStep
