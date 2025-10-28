@@ -93,7 +93,7 @@ const ScriptGenerationStep = ({ 
     const file = new Blob([generatedScript], { type: 'text/plain;charset=utf-8' });
     
     element.href = URL.createObjectURL(file);
-    element.download = 'video-script.txt';
+    element.download = 'generate-script.txt';
     
     document.body.appendChild(element);
     element.click();
