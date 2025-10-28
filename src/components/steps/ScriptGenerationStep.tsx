@@ -120,6 +120,39 @@ const ScriptGenerationStep = ({
         </div>
       </CardContent>
     </Card>
+
+{/* 【恢復導航按鈕】 */}
+          <div className="flex justify-center">
+            <div className="flex space-x-4">
+              <Button 
+                variant="outline"
+                onClick={onPrev}
+                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-3 text-base font-medium"
+              >
+                ← 上一步
+              </Button>
+              <Button 
+                onClick={downloadScript}
+                variant="outline"
+                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-3 text-base font-medium"
+                disabled={isGenerating || !generatedScript || generatedScript.startsWith("腳本生成失敗")}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                下載文字腳本
+              </Button>
+              <Button 
+                onClick={onNext}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-base font-medium"
+                disabled={isGenerating || !generatedScript || generatedScript.startsWith("腳本生成失敗")}
+              >
+                <Image className="w-4 h-4 mr-2" />
+                生成照片
+              </Button>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
