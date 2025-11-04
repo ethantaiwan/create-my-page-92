@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-const TARGET_LOGO_URL = "/lovable-uploads/evo.png";
+const TARGET_LOGO_URL = "/lovable-uploads/evo-new.png";
 const Header = () => {
   const [logoUrl, setLogoUrl] = useState<string>(TARGET_LOGO_URL);
   const [isProcessing, setIsProcessing] = useState(false);
