@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 
 const Header = () => {
-  const [logoUrl, setLogoUrl] = useState<string>("/lovable-uploads/evo-logo.png");
-  const [isProcessing, setIsProcessing] = useState(true);
+  <!-- const [logoUrl, setLogoUrl] = useState<string>("/lovable-uploads/evo-logo.png");-->
+  const [isProcessing, setIsProcessing] = useState(True);
 
   useEffect(() => {
     const processLogo = async () => {
@@ -14,7 +14,7 @@ const Header = () => {
         const { removeBackground, loadImageFromUrl } = await import('@/utils/backgroundRemoval');
         
         // Load and process the image
-        const imageElement = await loadImageFromUrl("/lovable-uploads/e06228cb-23f5-4a3d-9aef-04e6f75aa289.png");
+        const imageElement = await loadImageFromUrl("/lovable-uploads/evo-logo.png");
         console.log('Image loaded, starting background removal...');
         
         const processedBlob = await removeBackground(imageElement);
