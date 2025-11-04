@@ -16,7 +16,7 @@ const LogoProcessor = ({ onLogoReady }: LogoProcessorProps) => {
         console.log('Loading original logo...');
         
         // Load the original image
-        const originalLogoUrl = "/lovable-uploads/evo-logo.png";
+        const originalLogoUrl = "/lovable-uploads/evo.png";
         const imageElement = await loadImageFromUrl(originalLogoUrl);
         console.log('Image loaded successfully');
         
@@ -34,7 +34,7 @@ const LogoProcessor = ({ onLogoReady }: LogoProcessorProps) => {
         console.error('Error processing logo:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
         // Fallback to original image
-        onLogoReady("/lovable-uploads/evo-logo.png");
+        onLogoReady("/lovable-uploads/evo.png");
         setIsProcessing(false);
       }
     };
