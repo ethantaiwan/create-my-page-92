@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 
 const Header = () => {
-  <!-- const [logoUrl, setLogoUrl] = useState<string>("/lovable-uploads/evo-logo.png");-->
-  const [isProcessing, setIsProcessing] = useState(True);
+  const [logoUrl, setLogoUrl] = useState<string>("/lovable-uploads/evo-logo.png");
+  const [isProcessing, setIsProcessing] = useState(true);
 
   useEffect(() => {
     const processLogo = async () => {
