@@ -16,7 +16,7 @@ const LogoProcessor = ({ onLogoReady }: LogoProcessorProps) => {
         console.log('Loading original logo...');
         
         // Load the original image
-        const originalLogoUrl = "/lovable-uploads/cd4ff61f-2167-4420-bf2c-eab3fa899ab9.png";
+        const originalLogoUrl = "/lovable-uploads/evo-logo.png";
         const imageElement = await loadImageFromUrl(originalLogoUrl);
         console.log('Image loaded successfully');
         
