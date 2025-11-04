@@ -34,7 +34,7 @@ const LogoProcessor = ({ onLogoReady }: LogoProcessorProps) => {
         console.error('Error processing logo:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
         // Fallback to original image
-        onLogoReady("/lovable-uploads/cd4ff61f-2167-4420-bf2c-eab3fa899ab9.png");
+        onLogoReady("/lovable-uploads/evo-logo.png");
         setIsProcessing(false);
       }
     };
