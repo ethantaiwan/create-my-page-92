@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-
+const TARGET_LOGO_URL = "/lovable-uploads/evo-logo.png";
 const Header = () => {
-  const [logoUrl, setLogoUrl] = useState<string>("/lovable-uploads/evo-logo.png");
-  const [isProcessing, setIsProcessing] = useState(true);
-
+  const [logoUrl, setLogoUrl] = useState<string>(TARGET_LOGO_URL);
+  const [isProcessing, setIsProcessing] = useState(false);
+/*
   useEffect(() => {
     const processLogo = async () => {
       try {
@@ -32,7 +32,7 @@ const Header = () => {
 
     processLogo();
   }, []);
-
+*/
   return (
     <header className="bg-header-bg text-step-text py-4 px-6" style={{ background: 'var(--header-bg)' }}>
       <div className="container mx-auto flex justify-between items-center">
