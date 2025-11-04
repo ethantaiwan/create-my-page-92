@@ -37,7 +37,9 @@ const Header = () => {
     <header className="bg-header-bg text-step-text py-4 px-6" style={{ background: 'var(--header-bg)' }}>
       <div className="container mx-auto flex justify-between items-center">
         <div className="flex items-center space-x-3">
-          <div className="relative">
+          <div className="relative"
+               style={{ backgroundColor: 'transparent' }} // 增加這一行
+          >
             <img 
               src={logoUrl} 
               alt="Anchor Film Logo" 
