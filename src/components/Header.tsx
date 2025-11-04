@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 const Header = () => {
-  const [logoUrl, setLogoUrl] = useState<string>("/lovable-uploads/e06228cb-23f5-4a3d-9aef-04e6f75aa289.png");
+  const [logoUrl, setLogoUrl] = useState<string>("/lovable-uploads/evo-logo.png");
   const [isProcessing, setIsProcessing] = useState(true);
 
   useEffect(() => {
