@@ -29,10 +29,10 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
     // Simulate AI image generation
     setTimeout(() => {
       const mockImages = [
-        { url: "https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=800&h=600&fit=crop", prompt: "開場畫面 - 公司標誌展示" },
-        { url: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&h=600&fit=crop", prompt: "產品特寫 - 細節展示" },
-        { url: "https://images.unsplash.com/photo-1551434678-e076c223a692?w=800&h=600&fit=crop", prompt: "團隊工作場景" },
-        { url: "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?w=800&h=600&fit=crop", prompt: "結尾畫面 - 品牌信息" },
+        { url: "https://image-generator-i03j.onrender.com/image-uploads/temp/001.png?w=800&h=600&fit=crop", prompt: "開場畫面 - 公司標誌展示" },
+        { url: "https://image-generator-i03j.onrender.com/image-uploads/temp/002.png?w=800&h=600&fit=crop", prompt: "產品特寫 - 細節展示" },
+        { url: "https://image-generator-i03j.onrender.com/image-uploads/temp/003.png?w=800&h=600&fit=crop", prompt: "團隊工作場景" },
+        { url: "https://image-generator-i03j.onrender.com/image-uploads/temp/004.png?w=800&h=600&fit=crop", prompt: "結尾畫面 - 品牌信息" },
       ];
       setImages(mockImages);
       setEditPrompts(mockImages.map(img => img.prompt));
