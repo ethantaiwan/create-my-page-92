@@ -80,11 +80,14 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
         const data = await response.json();
         
         // 假設後端回傳的 data.uploaded_urls 包含了 4 個公開 URL
-        const newImages: ImageState[] = data.uploaded_urls.map((url: string, index: number) => ({
+        const newImages: ImageState[] = data.uploaded_urls.map((relativePath: string, index: number) => {
             // 這裡使用後端回傳的公開 URL (e.g., .../001.png)
-            url: `${url}?v=${Date.now()}`, 
-            prompt: `預設提示詞 ${index + 1} (${data.full_prompt})`, // 假設後端回傳 full_prompt
-            publicUrl: url, // 儲存乾淨的公開 URL 供編輯使用
+            const absoluteUrl = `${API_BASE_URL}${relativePath}`;
+            return {
+              url: `${absoluteUrl}?v=${Date.now()}`, 
+              prompt: `預設提示詞 ${index + 1} (${data.full_prompt})`, // 假設後端回傳 full_prompt
+              publicUrl: absoluteUrl, // 儲存乾淨的公開 URL 供編輯使用
+            };
         }));
         
         setImages(newImages);
@@ -95,9 +98,8 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
     } catch (error) {
         console.error("生成失敗:", error);
         toast({
-            title: "照片生成失敗",
-            description: error instanceof Error ? error.message : "無法連接伺服器或處理圖片。",
-            variant: "destructive",
+            toast.error("照片編輯失敗", {
+            description: error instanceof Error ? error.message : "無法連接到伺服器或處理圖片。",
         });
     } finally {
         setIsGenerating(false);
