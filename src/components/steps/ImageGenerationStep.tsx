@@ -36,16 +36,14 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
   const [isGenerating, setIsGenerating] = useState(false);
   const [editPrompts, setEditPrompts] = useState<string[]>(["", "", "", ""]);
 
-  // 輔助函式：根據索引生成圖片的公開 URL
+  // 輔助函式 (未使用，但保留)
   const generatePublicUrl = (index: number, baseUrl: string) => {
-    // 假設後端儲存路徑是 /lovable-uploads/temp/001.png
     const filename = `00${index + 1}.png`;
     return `${baseUrl}/image-uploads/temp/${filename}`;
   };
 
   // 根據表單數據組合 Base Prompt
   const createBasePrompt = useMemo(() => {
-    // 這裡組合您的 Style 和 Techniques 作為 Base Prompt
     return `Style: ${formData.visualStyle}. Techniques: ${formData.videoTechniques}.`;
   }, [formData]);
 
@@ -54,20 +52,20 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
   const generateImages = useCallback(async () => {
     setIsGenerating(true);
     
-    // 組合請求 Body (對應後端的 KontextAndImageCreate 模型)
     const payload = {
         description: `公司資訊: ${formData.companyInfo}. 影片類型: ${formData.videoType}.`,
         base_prompt: createBasePrompt,
-        image_count: 4, // 請求生成 4 張圖
+        image_count: 4, 
     };
 
     toast({ title: "開始生成照片", description: "AI 正在根據您的腳本生成 4 張草稿圖..." });
 
     try {
+        // ❗ 修正 1：API 參數名稱改為 target_index ❗
         const response = await fetch(`${API_BASE_URL}/generate_image_store?target_index=0`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json', // 這裡傳送的是 JSON Body
+                'Content-Type': 'application/json',
             },
             body: JSON.stringify(payload),
         });
@@ -79,16 +77,16 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
 
         const data = await response.json();
         
-        // 假設後端回傳的 data.uploaded_urls 包含了 4 個公開 URL
+        // ❗ 修正 2：修正 map 函式的語法 (移除多餘括號) ❗
         const newImages: ImageState[] = data.uploaded_urls.map((relativePath: string, index: number) => {
-            // 這裡使用後端回傳的公開 URL (e.g., .../001.png)
             const absoluteUrl = `${API_BASE_URL}${relativePath}`;
             return {
               url: `${absoluteUrl}?v=${Date.now()}`, 
-              prompt: `預設提示詞 ${index + 1} (${data.full_prompt})`, // 假設後端回傳 full_prompt
-              publicUrl: absoluteUrl, // 儲存乾淨的公開 URL 供編輯使用
+              prompt: `預設提示詞 ${index + 1} (${data.full_prompt})`, 
+              publicUrl: absoluteUrl, 
             };
         }); 
+        
         setImages(newImages);
         setEditPrompts(newImages.map(img => img.prompt));
         
@@ -96,9 +94,10 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
 
     } catch (error) {
         console.error("生成失敗:", error);
-        toast({
-            toast.error("照片編輯失敗", {
-            description: error instanceof Error ? error.message : "無法連接到伺服器或處理圖片。",
+        
+        // ❗ 修正 3：修正 toast 語法錯誤 (移除巢狀結構) ❗
+        toast.error("照片生成失敗", {
+            description: error instanceof Error ? error.message : "無法連接伺服器或處理圖片。",
         });
     } finally {
         setIsGenerating(false);
@@ -110,9 +109,7 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
   const regenerateImage = useCallback(async (index: number) => {
     const currentPrompt = editPrompts[index];
     const targetIndex = index; 
-    const currentImage = images[index]; // 獲取當前圖片的狀態
-
-    // (可選) 可以在此處設置單張圖片的加載狀態
+    const currentImage = images[index]; 
     
     toast({
         title: "重新生成照片",
@@ -120,30 +117,22 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
     });
     
     try {
-        // --- 修正點：必須將 URL 轉為 File ---
-        
-        // 1. 抓取當前顯示的圖片 (從其 URL)
+        // 1. 抓取圖片並轉為 Blob
         const imageResponse = await fetch(currentImage.url);
         if (!imageResponse.ok) {
             throw new Error(`無法抓取原始圖片進行編輯: ${imageResponse.status}`);
         }
-        
-        // 2. 將圖片轉換為 Blob (二進制數據)
         const imageBlob = await imageResponse.blob();
 
-        // 3. 建立 FormData 並附加數據
+        // 2. 建立 FormData
         const formData = new FormData();
         formData.append('edit_prompt', currentPrompt);
-        
-        // 4. 將 Blob 作為檔案附加
-        // 格式: append(name, blob, filename)
         formData.append('file', imageBlob, `original_image_${index}.png`); 
-        // --- 修正結束 ---
 
+        // 3. 呼叫 API (edit_image_store 路由)
         const response = await fetch(`${API_BASE_URL}/edit_image_store?target_index=${targetIndex}`, {
             method: 'POST',
             body: formData, 
-            // (註: FormData 不需要手動設定 Content-Type)
         });
 
         if (!response.ok) {
@@ -153,17 +142,15 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
 
         const data = await response.json();
         
-        // 取得新的公開 URL (後端回傳的 uploaded_urls[0])
-        const newPublicUrl = data.uploaded_urls[0];
+        // 4. 更新狀態
+        const newPublicRelativeUrl = data.uploaded_urls[0]; 
+        const absoluteUrl = `${API_BASE_URL}${newPublicRelativeUrl}`;
         
         const newImages = [...images];
         newImages[index] = {
             ...currentImage,
-            // 更新 URL，並加上版本號確保瀏覽器重新載入
-            url: `${newPublicUrl}?v=${Date.now()}`, 
-            publicUrl: newPublicUrl,
-            // (可選) 如果後端回傳 edit_prompt，也可以更新
-            // prompt: data.edit_prompt 
+            url: `${absoluteUrl}?v=${Date.now()}`, 
+            publicUrl: absoluteUrl,
         };
         
         setImages(newImages);
@@ -175,16 +162,17 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
 
     } catch (error) {
         console.error("重新生成失敗:", error);
-        toast({
-            title: "照片編輯失敗",
+        
+        // ❗ 修正 4：修正 toast 語法錯誤 (移除 variant) ❗
+        toast.error("照片編輯失敗", {
             description: error instanceof Error ? error.message : "無法連接到伺服器或處理圖片。",
-            variant: "destructive",
         });
     }
-  }, [images, editPrompts, toast]); // 確保依賴項正確
+  }, [images, editPrompts, toast]); 
+
+  // --- 3. 下載和更新 Prompt (保持不變) ---
 
   const downloadAllImages = () => {
-    // 這裡應該實現一個下載邏輯，例如將所有 publicUrl 傳給後端進行打包下載
     toast({
       title: "下載照片",
       description: "正在準備下載所有照片 (此功能需要後端支援文件打包)...",
@@ -197,6 +185,7 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
     setEditPrompts(newPrompts);
   };
 
+  // --- 4. JSX 渲染 (保持不變) ---
   return (
     <Card className="max-w-6xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
       <CardContent className="p-8">
