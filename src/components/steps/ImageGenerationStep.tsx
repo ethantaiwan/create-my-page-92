@@ -51,41 +51,59 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
   // --- 1. 開始生成 (呼叫 /generate_image_store) ---
   const generateImages = useCallback(async () => {
     setIsGenerating(true);
-    
-    const payload = {
+    toast({ title: "開始生成照片", description: "AI 正在分別生成 4 張草稿圖..." });
+
+    // 基本的請求內容
+    const basePayload = {
         description: `公司資訊: ${formData.companyInfo}. 影片類型: ${formData.videoType}.`,
         base_prompt: createBasePrompt,
-        image_count: 4, 
+        image_count: 1, // 每次請求只生成 1 張
     };
 
-    toast({ title: "開始生成照片", description: "AI 正在根據您的腳本生成 4 張草稿圖..." });
+    // 建立 4 個 fetch 請求的 Promise 陣列
+    const fetchPromises = [];
+    
+    for (let i = 0; i < 4; i++) {
+        // 每次呼叫都傳入不同的 target_start_index
+        const url = `${API_BASE_URL}/generate_image_store?target_index=${i}`;
+        
+        fetchPromises.push(
+            fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(basePayload), // Body 內容可以相同
+            })
+        );
+    }
 
     try {
-        // ❗ 修正 1：API 參數名稱改為 target_index ❗
-        const response = await fetch(`${API_BASE_URL}/generate_image_store?target_index=0`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(payload),
-        });
+        // --- 等待所有 4 個請求都完成 ---
+        const responses = await Promise.all(fetchPromises);
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || `生成錯誤: ${response.status}`);
+        // 檢查是否有任何一個請求失敗
+        const failedResponse = responses.find(res => !res.ok);
+        if (failedResponse) {
+            const errorData = await failedResponse.json();
+            throw new Error(errorData.detail || `API 錯誤: ${failedResponse.status}`);
         }
 
-        const data = await response.json();
-        
-        // ❗ 修正 2：修正 map 函式的語法 (移除多餘括號) ❗
-        const newImages: ImageState[] = data.uploaded_urls.map((relativePath: string, index: number) => {
+        // 將所有 4 個回應都轉為 JSON
+        const results = await Promise.all(responses.map(res => res.json()));
+
+        // --- 處理 4 個 API 的回傳結果 ---
+        const newImages: ImageState[] = results.map((data, index) => {
+            // data 是單次 API 的回傳 (只包含 1 個 URL)
+            const relativePath = data.uploaded_urls[0]; 
             const absoluteUrl = `${API_BASE_URL}${relativePath}`;
+            
             return {
-              url: `${absoluteUrl}?v=${Date.now()}`, 
-              prompt: `預設提示詞 ${index + 1} (${data.full_prompt})`, 
-              publicUrl: absoluteUrl, 
+                url: `${absoluteUrl}?v=${Date.now()}`, 
+                prompt: `預設提示詞 ${index + 1} (${data.full_prompt})`,
+                publicUrl: absoluteUrl, 
             };
-        }); 
+        });
         
         setImages(newImages);
         setEditPrompts(newImages.map(img => img.prompt));
@@ -94,8 +112,6 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
 
     } catch (error) {
         console.error("生成失敗:", error);
-        
-        // ❗ 修正 3：修正 toast 語法錯誤 (移除巢狀結構) ❗
         toast.error("照片生成失敗", {
             description: error instanceof Error ? error.message : "無法連接伺服器或處理圖片。",
         });
