@@ -88,8 +88,7 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
               prompt: `預設提示詞 ${index + 1} (${data.full_prompt})`, // 假設後端回傳 full_prompt
               publicUrl: absoluteUrl, // 儲存乾淨的公開 URL 供編輯使用
             };
-        }));
-        
+        }); 
         setImages(newImages);
         setEditPrompts(newImages.map(img => img.prompt));
         
