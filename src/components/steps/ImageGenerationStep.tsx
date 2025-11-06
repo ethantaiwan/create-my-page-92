@@ -109,24 +109,40 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
   const regenerateImage = useCallback(async (index: number) => {
     const currentPrompt = editPrompts[index];
     const targetIndex = index; 
-    const currentImage = images[index];
+    const currentImage = images[index]; // 獲取當前圖片的狀態
 
-    // 可以考慮在這裡鎖定單個圖片的生成狀態
-
+    // (可選) 可以在此處設置單張圖片的加載狀態
+    
     toast({
         title: "重新生成照片",
-        description: `正在使用提示詞 [${currentPrompt}] 重新生成第 ${index + 1} 張照片...`,
+        description: `正在抓取原始圖片並使用新提示詞 [${currentPrompt}] 進行編輯...`,
     });
     
     try {
+        // --- 修正點：必須將 URL 轉為 File ---
+        
+        // 1. 抓取當前顯示的圖片 (從其 URL)
+        const imageResponse = await fetch(currentImage.url);
+        if (!imageResponse.ok) {
+            throw new Error(`無法抓取原始圖片進行編輯: ${imageResponse.status}`);
+        }
+        
+        // 2. 將圖片轉換為 Blob (二進制數據)
+        const imageBlob = await imageResponse.blob();
+
+        // 3. 建立 FormData 並附加數據
         const formData = new FormData();
         formData.append('edit_prompt', currentPrompt);
-        // 不傳送 file，使用 target_index
+        
+        // 4. 將 Blob 作為檔案附加
+        // 格式: append(name, blob, filename)
+        formData.append('file', imageBlob, `original_image_${index}.png`); 
+        // --- 修正結束 ---
 
         const response = await fetch(`${API_BASE_URL}/edit_image_store?target_index=${targetIndex}`, {
             method: 'POST',
-            // 讓瀏覽器自動設定 multipart/form-data
             body: formData, 
+            // (註: FormData 不需要手動設定 Content-Type)
         });
 
         if (!response.ok) {
@@ -136,15 +152,17 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
 
         const data = await response.json();
         
-        // 取得新的公開 URL
+        // 取得新的公開 URL (後端回傳的 uploaded_urls[0])
         const newPublicUrl = data.uploaded_urls[0];
         
         const newImages = [...images];
         newImages[index] = {
             ...currentImage,
             // 更新 URL，並加上版本號確保瀏覽器重新載入
-            url: `${newPublicUrl}?v=${Date.now()}`,
+            url: `${newPublicUrl}?v=${Date.now()}`, 
             publicUrl: newPublicUrl,
+            // (可選) 如果後端回傳 edit_prompt，也可以更新
+            // prompt: data.edit_prompt 
         };
         
         setImages(newImages);
@@ -162,8 +180,7 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
             variant: "destructive",
         });
     }
-  }, [images, editPrompts, toast]);
-
+  }, [images, editPrompts, toast]); // 確保依賴項正確
 
   const downloadAllImages = () => {
     // 這裡應該實現一個下載邏輯，例如將所有 publicUrl 傳給後端進行打包下載
