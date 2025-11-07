@@ -7,8 +7,8 @@ import { useToast } from "@/hooks/use-toast"; // 假設您的 toast hook 路徑
 
 // 請替換成您的實際 Web Service URL
 const API_BASE_URL = "https://image-generator-i03j.onrender.com"; 
-// ❗ 修正點 1: 更新 API 路由 ❗
-// (我假設新 API 的路由是 /api/extract_then_generate，請根據您的後端 app.py 進行調整)
+
+// ❗ 假設 /api/extract_then_generate 是您後端的新路由
 const API_IMAGE_GENERATE_STORE = `${API_BASE_URL}/api/extract_then_generate`; 
 const API_IMAGE_EDIT_STORE = `${API_BASE_URL}/edit_image_store`;
 
@@ -43,7 +43,7 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
   }, [formData]);
 
 
-  // --- 1. 開始生成 (❗ 已修改為呼叫 extract_then_generate) ---
+  // --- 1. 開始生成 (呼叫 extract_then_generate) ---
   const generateImages = useCallback(async () => {
     setIsGenerating(true);
     
@@ -55,18 +55,18 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
     const payload = {
         result: combinedPrompt,
         images_per_prompt: 4, // 告訴後端我們需要 4 張
-        start_index: 0,
+        start_index: 0,       // 從索引 0 開始 (001.png)
         naming: "scene"
     };
 
     toast({ title: "開始生成照片", description: "AI 正在批次生成 4 張草稿圖..." });
 
     try {
-        // 3. 呼叫新的 API (單次呼叫，不再需要 Query 參數)
+        // 3. 呼叫新的 API (單次呼叫)
         const response = await fetch(API_IMAGE_GENERATE_STORE, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json', // 傳送的是 JSON Body
+                'Content-Type': 'application/json',
             },
             body: JSON.stringify(payload),
         });
@@ -78,12 +78,11 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
 
         const data = await response.json();
         
-        // 4. 處理回傳 (邏輯保持不變，將相對路徑轉為絕對路徑)
+        // 4. 處理回傳 (修正 map 語法)
         const newImages: ImageState[] = data.uploaded_urls.map((relativePath: string, index: number) => {
             const absoluteUrl = `${API_BASE_URL}${relativePath}`;
             return {
               url: `${absoluteUrl}?v=${Date.now()}`, 
-              // 假設後端回傳 full_prompt，否則使用 combinedPrompt
               prompt: `預設提示詞 ${index + 1} (${data.full_prompt || combinedPrompt})`, 
               publicUrl: absoluteUrl, 
             };
@@ -97,7 +96,7 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
     } catch (error) {
         console.error("生成失敗:", error);
         
-        // 5. 修正 toast 語法
+        // ❗ 修正 toast 語法錯誤 ❗
         toast.error("照片生成失敗", {
             description: error instanceof Error ? error.message : "無法連接伺服器或處理圖片。",
         });
@@ -107,58 +106,70 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
   }, [formData, createBasePrompt, toast]);
 
 
-  // --- 2. 重新生成單張照片 (邏輯保持不變，但修正 toast 錯誤) ---
-// --- 1. 開始生成 (呼叫 extract_then_generate) ---
-  const generateImages = useCallback(async () => {
-    setIsGenerating(true);
+  // --- 2. 重新生成單張照片 (呼叫 /edit_image_store) ---
+  const regenerateImage = useCallback(async (index: number) => {
+    const currentPrompt = editPrompts[index];
+    const targetIndex = index; 
+    const currentImage = images[index]; 
     
-    // 1. 組合 "result" 字串
-    const description = `公司資訊: ${formData.companyInfo}. 影片類型: ${formData.videoType}.`;
-    const combinedPrompt = `${description}. ${createBasePrompt}`;
-
-    // 2. 組合新的 API Payload
-    const payload = {
-        result: combinedPrompt,
-        images_per_prompt: 4, 
-        start_index: 0,
-        naming: "scene"
-    };
-
-    // --- ❗ 關鍵除錯點：打印所有發送前的參數 ❗ ---
-    console.log("--- [前端除錯]：準備發送 'generateImages' 請求 ---");
-    console.log("1. 原始 formData:", formData);
-    console.log("2. 組合後的 'result' (prompt):", combinedPrompt);
-    console.log("3. 完整的 Payload (JSON Body):", payload);
+    toast({
+        title: "重新生成照片",
+        description: `正在抓取原始圖片並使用新提示詞 [${currentPrompt}] 進行編輯...`,
+    });
     
-    // 檢查 API 路由是否正確
-    const finalApiUrl = `${API_BASE_URL}/api/extract_then_generate`;
-    console.log("4. 目標 API URL:", finalApiUrl);
-    console.log("-------------------------------------------------");
-    
-    toast({ title: "開始生成照片", description: "正在批次生成 4 張草稿圖..." });
-
     try {
-        // 3. 呼叫新的 API
-        const response = await fetch(finalApiUrl, { // <-- 使用 finalApiUrl
+        // 1. 抓取圖片並轉為 Blob
+        const imageResponse = await fetch(currentImage.url);
+        if (!imageResponse.ok) {
+            throw new Error(`無法抓取原始圖片進行編輯: ${imageResponse.status}`);
+        }
+        const imageBlob = await imageResponse.blob();
+
+        // 2. 建立 FormData
+        const formData = new FormData();
+        formData.append('edit_prompt', currentPrompt);
+        formData.append('file', imageBlob, `original_image_${index}.png`); 
+
+        // 3. 呼叫 API (edit_image_store 路由)
+        const response = await fetch(`${API_IMAGE_EDIT_STORE}?target_index=${targetIndex}`, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json', 
-            },
-            body: JSON.stringify(payload),
+            body: formData, 
         });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || `API 錯誤: ${response.status}`);
+        }
+
+        const data = await response.json();
         
-        // ... (後續的 response.ok 檢查和 .json() 處理) ...
-        // ...
+        // 4. 更新狀態
+        const newPublicRelativeUrl = data.uploaded_urls[0]; 
+        const absoluteUrl = `${API_BASE_URL}${newPublicRelativeUrl}`;
         
+        const newImages = [...images];
+        newImages[index] = {
+            ...currentImage,
+            url: `${absoluteUrl}?v=${Date.now()}`, 
+            publicUrl: absoluteUrl,
+        };
+        
+        setImages(newImages);
+
+        toast({
+            title: "照片已更新",
+            description: `第 ${index + 1} 張照片已重新生成並儲存。`,
+        });
+
     } catch (error) {
-        console.error("生成失敗 (Fetch Error):", error); // <-- 這裡也會打印錯誤
-        toast.error("照片生成失敗", {
-            description: error instanceof Error ? error.message : "無法連接伺服器或處理圖片。",
+        console.error("重新生成失敗:", error);
+        
+        // ❗ 修正 toast 語法錯誤 ❗
+        toast.error("照片編輯失敗", {
+            description: error instanceof Error ? error.message : "無法連接到伺服器或處理圖片。",
         });
-    } finally {
-        setIsGenerating(false);
     }
-  }, [formData, createBasePrompt, toast]);
+  }, [images, editPrompts, toast]); 
 
   // --- 3. 下載和更新 Prompt (保持不變) ---
 
@@ -221,7 +232,7 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
                     <div className="space-y-3">
                       <Input
                         value={editPrompts[index]}
-                        onChange={(e) => updatePrompt(index, e.Targe.value)}
+                        onChange={(e) => updatePrompt(index, e.target.value)}
                         placeholder="輸入提示詞來調整照片..."
                         className="border-primary/30 focus:border-primary"
                         disabled={isGenerating}
