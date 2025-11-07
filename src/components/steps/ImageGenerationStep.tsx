@@ -3,13 +3,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { RefreshCw, Download, Sparkles } from "lucide-react";
-import { useToast } from "@/hooks/use-toast"; // 假設您的 toast hook 路徑
+import { useToast } from "@/hooks/use-toast";
 
-// 請替換成您的實際 Web Service URL
-const API_BASE_URL = "https://image-generator-i03j.onrender.com"; 
-const API_IMAGE_GENERATE_STORE = `${API_BASE_URL}/extract_then_generate`;
-const API_IMAGE_EDIT_STORE = `${API_BASE_URL}/edit_image_store`;
+// ====== API 常數 ======
+const API_BASE_URL = "https://image-generator-i03j.onrender.com";
+const API_EXTRACT_THEN_GENERATE = `${API_BASE_URL}/extract_then_generate`; // 一鍵流程
+const API_IMAGE_EDIT_STORE = `${API_BASE_URL}/edit_image_store`;            // 單張重生
 
+// ====== Props ======
 interface ImageGenerationStepProps {
   formData: {
     companyInfo: string;
@@ -20,194 +21,227 @@ interface ImageGenerationStepProps {
   };
   onPrev: () => void;
   onNext: () => void;
+  /**
+   * 上一步產出的「完整腳本文字」（必須包含 image_prompt 段落；多行用 \n）
+   * 若未提供將無法啟動「一鍵生成」流程
+   */
+  scriptText?: string;
 }
 
-// 圖片狀態的類型定義
+// ====== 型別 ======
 interface ImageState {
-    url: string; 
-    prompt: string;
-    // 預計從後端接收到的公開路徑，用於後續編輯
-    publicUrl: string; 
+  url: string;
+  prompt: string;
+  publicUrl: string;
 }
 
-const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepProps) => {
+type ExtractThenGenerateOut = {
+  forward_body: {
+    prompts: string[];
+    images_per_prompt: number;
+    start_index: number;
+    naming: "scene" | "sequence";
+  };
+  generate_result: {
+    message: string;
+    results: Array<{
+      prompt_index: number;
+      uploaded_urls: string[];
+      errors: string[];
+    }>;
+  };
+  uploaded_urls_flat: string[];
+  n_prompts: number;
+  images_per_prompt: number;
+};
+
+const ImageGenerationStep = ({ formData, onPrev, onNext, scriptText }: ImageGenerationStepProps) => {
   const { toast } = useToast();
   const [images, setImages] = useState<ImageState[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [editPrompts, setEditPrompts] = useState<string[]>(["", "", "", ""]);
 
-  // 輔助函式 (未使用，但保留)
-  const generatePublicUrl = (index: number, baseUrl: string) => {
-    const filename = `00${index + 1}.png`;
-    return `${baseUrl}/image-uploads/temp/${filename}`;
-  };
-
-  // 根據表單數據組合 Base Prompt
+  // 顯示用途的 base prompt（非必要，但保留給你 UI）
   const createBasePrompt = useMemo(() => {
     return `Style: ${formData.visualStyle}. Techniques: ${formData.videoTechniques}.`;
-  }, [formData]);
+  }, [formData.visualStyle, formData.videoTechniques]);
 
-
-  // --- 1. 開始生成 (呼叫 /generate_image_store) ---
+  // ====== 一鍵生成：解析腳本 → 驗證 → 自動生圖 → 回傳 URL ======
   const generateImages = useCallback(async () => {
     setIsGenerating(true);
-    toast({ title: "開始生成照片", description: "AI 正在依序生成 4 張草稿圖 (0/4)..." });
-
-    const basePayload = {
-        description: `公司資訊: ${formData.companyInfo}. 影片類型: ${formData.videoType}.`,
-        base_prompt: createBasePrompt,
-        image_count: 1, // 每次請求只生成 1 張
-    };
-
-    // 用於儲存最終結果
-    const newImages: ImageState[] = [];
-    const newPrompts: string[] = [];
+    setImages([]);
+    setEditPrompts(["", "", "", ""]);
 
     try {
-        // ❗ 修正：使用依序的 for 迴圈，而不是 Promise.all ❗
-        for (let i = 0; i < 4; i++) {
-            
-            // 更新 Toast 提示進度
-            toast({ title: "正在生成...", description: `正在處理第 ${i + 1} / 4 張照片...` });
-            
-            const url = `${API_BASE_URL}/generate_image_store?target_start_index=${i}`;
-            
-            const response = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(basePayload),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                // 如果中途失敗，立即停止並拋出錯誤
-                throw new Error(errorData.detail || `第 ${i + 1} 張照片生成失敗: ${response.status}`);
-            }
-
-            const data = await response.json();
-            
-            // --- 處理單次回傳的結果 ---
-            const relativePath = data.uploaded_urls[0]; 
-            const absoluteUrl = `${API_BASE_URL}${relativePath}`;
-            const prompt = `預設提示詞 ${i + 1} (${data.full_prompt})`;
-
-            // 將成功的結果存入暫存陣列
-            newImages.push({
-                url: `${absoluteUrl}?v=${Date.now()}`, 
-                prompt: prompt,
-                publicUrl: absoluteUrl, 
-            });
-            newPrompts.push(prompt);
-        }
-        
-        // --- 迴圈全部成功完成 ---
-        setImages(newImages);
-        setEditPrompts(newPrompts);
-        
-        toast({ title: "照片生成完成", description: `已成功生成 ${newImages.length} 張照片` });
-
-    } catch (error) {
-        console.error("生成失敗:", error);
-        toast.error("照片生成失敗", {
-            description: error instanceof Error ? error.message : "無法連接伺服器或處理圖片。",
+      // 1) 檢查腳本文字（必須包含 image_prompt 段落；多行請已處理為 \n）
+      const resultText = (scriptText ?? "").trim();
+      if (!resultText) {
+        toast({
+          title: "缺少腳本文字",
+          description: "請先提供含有 image_prompt 段落的完整劇本（scriptText）。",
+          variant: "destructive",
         });
-        // 保持 newImages 為空，UI 會停留在初始畫面
+        return;
+      }
+
+      // 2) 準備 payload（與後端 /extract_then_generate 完全一致）
+      const payload = {
+        result: resultText,
+        images_per_prompt: 1,
+        start_index: 0,
+        naming: "scene" as const,
+      };
+
+      toast({
+        title: "開始生成照片",
+        description: "AI 正在解析腳本並生成圖片…",
+      });
+
+      const resp = await fetch(API_EXTRACT_THEN_GENERATE, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!resp.ok) {
+        let msg = `生成 API 失敗：${resp.status}`;
+        try {
+          const err = await resp.json();
+          msg = typeof err?.detail === "string" ? err.detail : JSON.stringify(err);
+        } catch {
+          // ignore
+        }
+        throw new Error(msg);
+      }
+
+      const data: ExtractThenGenerateOut = await resp.json();
+
+      // 3) 後端回來多為相對路徑 → 換成絕對路徑並加 cache-buster
+      const absUrls = (data.uploaded_urls_flat || []).map(
+        (u) => `${API_BASE_URL}${u}?v=${Date.now()}`
+      );
+      const promptsFromServer = data.forward_body?.prompts ?? [];
+
+      const imgStates: ImageState[] = absUrls.map((url, i) => ({
+        url,
+        prompt: promptsFromServer[i] ?? "",
+        publicUrl: url.replace(/\?v=\d+$/, ""),
+      }));
+
+      setImages(imgStates);
+      setEditPrompts(promptsFromServer);
+
+      toast({
+        title: "照片生成完成",
+        description: `成功生成 ${absUrls.length} 張。${createBasePrompt ? `（${createBasePrompt}）` : ""}`,
+      });
+    } catch (e) {
+      console.error("生成失敗:", e);
+      toast({
+        title: "照片生成失敗",
+        description: e instanceof Error ? e.message : "無法連接伺服器或處理圖片。",
+        variant: "destructive",
+      });
     } finally {
-        setIsGenerating(false);
+      setIsGenerating(false);
     }
-  }, [formData, createBasePrompt, toast]);
+  }, [scriptText, toast, createBasePrompt]);
 
+  // ====== 單張重生：/edit_image_store ======
+  const regenerateImage = useCallback(
+    async (index: number) => {
+      const currentPrompt = editPrompts[index];
+      const currentImage = images[index];
+      const targetIndex = index;
 
-  // --- 2. 重新生成單張照片 (呼叫 /edit_image_store) ---
-  const regenerateImage = useCallback(async (index: number) => {
-    const currentPrompt = editPrompts[index];
-    const targetIndex = index; 
-    const currentImage = images[index]; 
-    
-    toast({
+      if (!currentImage) return;
+
+      toast({
         title: "重新生成照片",
-        description: `正在抓取原始圖片並使用新提示詞 [${currentPrompt}] 進行編輯...`,
-    });
-    
-    try {
-        // 1. 抓取圖片並轉為 Blob
-        const imageResponse = await fetch(currentImage.url);
+        description: `使用新提示詞重生第 ${index + 1} 張…`,
+      });
+
+      try {
+        // 1) 抓取現有圖片 → Blob
+        const imageResponse = await fetch(currentImage.url, { cache: "no-store" });
         if (!imageResponse.ok) {
-            throw new Error(`無法抓取原始圖片進行編輯: ${imageResponse.status}`);
+          throw new Error(`無法抓取原始圖片：${imageResponse.status}`);
         }
         const imageBlob = await imageResponse.blob();
 
-        // 2. 建立 FormData
-        const formData = new FormData();
-        formData.append('edit_prompt', currentPrompt);
-        formData.append('file', imageBlob, `original_image_${index}.png`); 
+        // 2) FormData 準備
+        const fd = new FormData();
+        fd.append("edit_prompt", currentPrompt);
+        fd.append("file", imageBlob, `original_image_${index}.png`);
 
-        // 3. 呼叫 API (edit_image_store 路由)
-        const response = await fetch(`${API_BASE_URL}/edit_image_store?target_index=${targetIndex}`, {
-            method: 'POST',
-            body: formData, 
+        // 3) 呼叫後端
+        const resp = await fetch(`${API_IMAGE_EDIT_STORE}?target_index=${targetIndex}`, {
+          method: "POST",
+          body: fd,
         });
 
-        if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || `API 錯誤: ${response.status}`);
+        if (!resp.ok) {
+          let msg = `API 錯誤：${resp.status}`;
+          try {
+            const err = await resp.json();
+            msg = typeof err?.detail === "string" ? err.detail : JSON.stringify(err);
+          } catch {
+            // ignore
+          }
+          throw new Error(msg);
         }
 
-        const data = await response.json();
-        
-        // 4. 更新狀態
-        const newPublicRelativeUrl = data.uploaded_urls[0]; 
-        const absoluteUrl = `${API_BASE_URL}${newPublicRelativeUrl}`;
-        
-        const newImages = [...images];
-        newImages[index] = {
-            ...currentImage,
-            url: `${absoluteUrl}?v=${Date.now()}`, 
-            publicUrl: absoluteUrl,
+        const data = await resp.json();
+        const rel = data.uploaded_urls?.[0];
+        if (!rel) throw new Error("後端未回傳 uploaded_urls。");
+
+        const abs = `${API_BASE_URL}${rel}`;
+
+        const next = [...images];
+        next[index] = {
+          ...currentImage,
+          url: `${abs}?v=${Date.now()}`,
+          publicUrl: abs,
         };
-        
-        setImages(newImages);
+        setImages(next);
 
         toast({
-            title: "照片已更新",
-            description: `第 ${index + 1} 張照片已重新生成並儲存。`,
+          title: "照片已更新",
+          description: `第 ${index + 1} 張已重新生成。`,
         });
-
-    } catch (error) {
-        console.error("重新生成失敗:", error);
-        
-        // ❗ 修正 4：修正 toast 語法錯誤 (移除 variant) ❗
-        toast.error("照片編輯失敗", {
-            description: error instanceof Error ? error.message : "無法連接到伺服器或處理圖片。",
+      } catch (e) {
+        console.error("重新生成失敗:", e);
+        toast({
+          title: "照片編輯失敗",
+          description: e instanceof Error ? e.message : "無法連接到伺服器或處理圖片。",
+          variant: "destructive",
         });
-    }
-  }, [images, editPrompts, toast]); 
+      }
+    },
+    [images, editPrompts, toast]
+  );
 
-  // --- 3. 下載和更新 Prompt (保持不變) ---
-
+  // ====== 下載全部（占位：保留 UI） ======
   const downloadAllImages = () => {
     toast({
       title: "下載照片",
-      description: "正在準備下載所有照片 (此功能需要後端支援文件打包)...",
+      description: "正在準備打包（需要後端提供打包 zip 端點）…",
     });
   };
 
   const updatePrompt = (index: number, value: string) => {
-    const newPrompts = [...editPrompts];
-    newPrompts[index] = value;
-    setEditPrompts(newPrompts);
+    const next = [...editPrompts];
+    next[index] = value;
+    setEditPrompts(next);
   };
 
-  // --- 4. JSX 渲染 (保持不變) ---
   return (
     <Card className="max-w-6xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
       <CardContent className="p-8">
-        <h2 className="text-2xl font-semibold text-foreground mb-2 text-center">
-          AI 照片生成
-        </h2>
-        
+        <h2 className="text-2xl font-semibold text-foreground mb-2 text-center">AI 照片生成</h2>
+
         <p className="text-center text-muted-foreground mb-8">
-          根據您的影片腳本，AI 將為您生成最多 4 張符合風格的照片。您可以調整提示詞來優化每張照片。
+          依據上一頁的劇本（含 image_prompt），一次自動生成照片。需要調整可在下方修改提示詞後單張重生。
         </p>
 
         {images.length === 0 ? (
@@ -217,9 +251,16 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
               disabled={isGenerating}
               className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-6 text-lg font-medium"
             >
-              <Sparkles className={`w-5 h-5 mr-2 ${isGenerating ? 'animate-spin' : ''}`} />
+              <Sparkles className={`w-5 h-5 mr-2 ${isGenerating ? "animate-spin" : ""}`} />
               {isGenerating ? "正在生成照片..." : "開始生成照片"}
             </Button>
+
+            {/* 可選：顯示基礎風格供使用者確認 */}
+            {createBasePrompt && (
+              <p className="mt-4 text-sm text-muted-foreground">
+                {createBasePrompt}
+              </p>
+            )}
           </div>
         ) : (
           <div className="space-y-8">
@@ -233,23 +274,24 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
                           正在載入...
                         </div>
                       ) : (
-                        <img 
-                          src={image.url} 
+                        <img
+                          src={image.url}
                           alt={`生成照片 ${index + 1}`}
                           className="w-full h-full object-cover"
+                          loading="lazy"
                         />
                       )}
                     </div>
-                    
+
                     <div className="space-y-3">
                       <Input
-                        value={editPrompts[index]}
+                        value={editPrompts[index] ?? ""}
                         onChange={(e) => updatePrompt(index, e.target.value)}
                         placeholder="輸入提示詞來調整照片..."
                         className="border-primary/30 focus:border-primary"
                         disabled={isGenerating}
                       />
-                      
+
                       <Button
                         variant="outline"
                         size="sm"
@@ -267,7 +309,7 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
             </div>
 
             <div className="flex justify-center space-x-4 pt-4">
-              <Button 
+              <Button
                 variant="outline"
                 onClick={onPrev}
                 className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-3 text-base font-medium"
@@ -275,7 +317,7 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
               >
                 ← 上一步
               </Button>
-              
+
               <Button
                 variant="outline"
                 onClick={generateImages}
@@ -285,7 +327,7 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
                 <RefreshCw className="w-4 h-4 mr-2" />
                 重新生成全部
               </Button>
-              
+
               <Button
                 variant="outline"
                 onClick={downloadAllImages}
@@ -295,8 +337,8 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
                 <Download className="w-4 h-4 mr-2" />
                 下載照片
               </Button>
-              
-              <Button 
+
+              <Button
                 onClick={onNext}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-base font-medium"
                 disabled={isGenerating}
