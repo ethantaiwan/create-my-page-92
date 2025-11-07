@@ -7,7 +7,7 @@ import { useToast } from "@/hooks/use-toast"; // 假設您的 toast hook 路徑
 
 // 請替換成您的實際 Web Service URL
 const API_BASE_URL = "https://image-generator-i03j.onrender.com"; 
-const API_IMAGE_GENERATE_STORE = `${API_BASE_URL}/generate_image_store`;
+const API_IMAGE_GENERATE_STORE = `${API_BASE_URL}/extract_then_generate`;
 const API_IMAGE_EDIT_STORE = `${API_BASE_URL}/edit_image_store`;
 
 interface ImageGenerationStepProps {
