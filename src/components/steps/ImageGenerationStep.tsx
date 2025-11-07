@@ -68,84 +68,85 @@ const ImageGenerationStep = ({ formData, onPrev, onNext, scriptText }: ImageGene
 
   // ====== 一鍵生成：解析腳本 → 驗證 → 自動生圖 → 回傳 URL ======
   const generateImages = useCallback(async () => {
-    setIsGenerating(true);
-    setImages([]);
-    setEditPrompts(["", "", "", ""]);
+  setIsGenerating(true);
+  setImages([]);
+  setEditPrompts(["", "", "", ""]);
 
-    try {
-      // 1) 檢查腳本文字（必須包含 image_prompt 段落；多行請已處理為 \n）
-      const resultText = (scriptText ?? "").trim();
-      if (!resultText) {
-        toast({
-          title: "缺少腳本文字",
-          description: "請先提供含有 image_prompt 段落的完整劇本（scriptText）。",
-          variant: "destructive",
-        });
-        return;
-      }
+  try {
+    // 1) 從上一步的 JSON 取出完整腳本文字（需含 image_prompt 段）
+    let resultText = (props.data?.result ?? "").toString();
+    resultText = resultText.replace(/\r\n/g, "\n").trim(); // 正規化換行與空白
 
-      // 2) 準備 payload（與後端 /extract_then_generate 完全一致）
-      const payload = {
-        result: resultText,
-        images_per_prompt: 1,
-        start_index: 0,
-        naming: "scene" as const,
-      };
-
+    if (!resultText) {
       toast({
-        title: "開始生成照片",
-        description: "AI 正在解析腳本並生成圖片…",
-      });
-
-      const resp = await fetch(API_EXTRACT_THEN_GENERATE, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!resp.ok) {
-        let msg = `生成 API 失敗：${resp.status}`;
-        try {
-          const err = await resp.json();
-          msg = typeof err?.detail === "string" ? err.detail : JSON.stringify(err);
-        } catch {
-          // ignore
-        }
-        throw new Error(msg);
-      }
-
-      const data: ExtractThenGenerateOut = await resp.json();
-
-      // 3) 後端回來多為相對路徑 → 換成絕對路徑並加 cache-buster
-      const absUrls = (data.uploaded_urls_flat || []).map(
-        (u) => `${API_BASE_URL}${u}?v=${Date.now()}`
-      );
-      const promptsFromServer = data.forward_body?.prompts ?? [];
-
-      const imgStates: ImageState[] = absUrls.map((url, i) => ({
-        url,
-        prompt: promptsFromServer[i] ?? "",
-        publicUrl: url.replace(/\?v=\d+$/, ""),
-      }));
-
-      setImages(imgStates);
-      setEditPrompts(promptsFromServer);
-
-      toast({
-        title: "照片生成完成",
-        description: `成功生成 ${absUrls.length} 張。${createBasePrompt ? `（${createBasePrompt}）` : ""}`,
-      });
-    } catch (e) {
-      console.error("生成失敗:", e);
-      toast({
-        title: "照片生成失敗",
-        description: e instanceof Error ? e.message : "無法連接伺服器或處理圖片。",
+        title: "缺少腳本文字",
+        description: "找不到上一步的 data.result（含 image_prompt），請先完成腳本步驟。",
         variant: "destructive",
       });
-    } finally {
-      setIsGenerating(false);
+      return;
     }
-  }, [scriptText, toast, createBasePrompt]);
+
+    // 2) 組 payload：與後端 /extract_then_generate 要求一致
+    const payload = {
+      result: resultText,
+      images_per_prompt: 1,
+      start_index: 0,
+      naming: "scene" as const,
+    };
+
+    toast({
+      title: "開始生成照片",
+      description: "AI 正在解析腳本並生成圖片…",
+    });
+
+    const resp = await fetch(API_EXTRACT_THEN_GENERATE, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!resp.ok) {
+      let msg = `生成 API 失敗：${resp.status}`;
+      try {
+        const err = await resp.json();
+        msg = typeof err?.detail === "string" ? err.detail : JSON.stringify(err);
+      } catch {}
+      throw new Error(msg);
+    }
+
+    const data: ExtractThenGenerateOut = await resp.json();
+
+    // 3) 轉成絕對網址 + cache-buster
+    const absUrls = (data.uploaded_urls_flat || []).map(
+      (u) => `${API_BASE_URL}${u}?v=${Date.now()}`
+    );
+    const promptsFromServer = data.forward_body?.prompts ?? [];
+
+    const imgStates: ImageState[] = absUrls.map((url, i) => ({
+      url,
+      prompt: promptsFromServer[i] ?? "",
+      publicUrl: url.replace(/\?v=\d+$/, ""),
+    }));
+
+    setImages(imgStates);
+    setEditPrompts(promptsFromServer);
+
+    toast({
+      title: "照片生成完成",
+      description: `成功生成 ${absUrls.length} 張。`,
+    });
+  } catch (e) {
+    console.error("生成失敗:", e);
+    toast({
+      title: "照片生成失敗",
+      description: e instanceof Error ? e.message : "無法連接伺服器或處理圖片。",
+      variant: "destructive",
+    });
+  } finally {
+    setIsGenerating(false);
+  }
+}, [toast, props.data]);
+
 
   // ====== 單張重生：/edit_image_store ======
   const regenerateImage = useCallback(
