@@ -22,10 +22,9 @@ interface ImageGenerationStepProps {
   onPrev: () => void;
   onNext: () => void;
   /**
-   * 上一步產出的「完整腳本文字」（必須包含 image_prompt 段落；多行用 \n）
-   * 若未提供將無法啟動「一鍵生成」流程
+   * 上一步產出的「完整腳本文字 JSON」，長文字在 data.result（需包含 image_prompt 段；多行以 \n）
    */
-  scriptText?: string;
+  data?: { result: string };
 }
 
 // ====== 型別 ======
@@ -55,98 +54,95 @@ type ExtractThenGenerateOut = {
   images_per_prompt: number;
 };
 
-const ImageGenerationStep = ({ formData, onPrev, onNext, scriptText }: ImageGenerationStepProps) => {
+const ImageGenerationStep = ({ formData, onPrev, onNext, data }: ImageGenerationStepProps) => {
   const { toast } = useToast();
   const [images, setImages] = useState<ImageState[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [editPrompts, setEditPrompts] = useState<string[]>(["", "", "", ""]);
+  const [editPrompts, setEditPrompts] = useState<string[]>([]);
 
-  // 顯示用途的 base prompt（非必要，但保留給你 UI）
+  // 顯示用途的 base prompt（非必要）
   const createBasePrompt = useMemo(() => {
     return `Style: ${formData.visualStyle}. Techniques: ${formData.videoTechniques}.`;
   }, [formData.visualStyle, formData.videoTechniques]);
 
   // ====== 一鍵生成：解析腳本 → 驗證 → 自動生圖 → 回傳 URL ======
   const generateImages = useCallback(async () => {
-  setIsGenerating(true);
-  setImages([]);
-  setEditPrompts(["", "", "", ""]);
+    setIsGenerating(true);
+    setImages([]);
+    setEditPrompts([]);
 
-  try {
-    // 1) 從上一步的 JSON 取出完整腳本文字（需含 image_prompt 段）
-    let resultText = (props.data?.result ?? "").toString();
-    resultText = resultText.replace(/\r\n/g, "\n").trim(); // 正規化換行與空白
+    try {
+      // 1) 從上一步 JSON 取出完整腳本文字
+      let resultText = (data?.result ?? "").toString().replace(/\r\n/g, "\n").trim();
+      if (!resultText) {
+        toast({
+          title: "缺少腳本文字",
+          description: "找不到上一步的 data.result（需含 image_prompt 段），請先完成腳本步驟。",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    if (!resultText) {
+      // 2) Payload 與後端 /extract_then_generate 一致
+      const payload = {
+        result: resultText,
+        images_per_prompt: 1,
+        start_index: 0,
+        naming: "scene" as const,
+      };
+
       toast({
-        title: "缺少腳本文字",
-        description: "找不到上一步的 data.result（含 image_prompt），請先完成腳本步驟。",
+        title: "開始生成照片",
+        description: "AI 正在解析腳本並生成圖片…",
+      });
+
+      const resp = await fetch(API_EXTRACT_THEN_GENERATE, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!resp.ok) {
+        let msg = `生成 API 失敗：${resp.status}`;
+        try {
+          const err = await resp.json();
+          msg = typeof err?.detail === "string" ? err.detail : JSON.stringify(err);
+        } catch {}
+        throw new Error(msg);
+      }
+
+      const apiData: ExtractThenGenerateOut = await resp.json();
+
+      // 3) 相對路徑 → 絕對路徑 + cache-buster
+      const absUrls = (apiData.uploaded_urls_flat || []).map(
+        (u) => `${API_BASE_URL}${u}?v=${Date.now()}`
+      );
+      const promptsFromServer = apiData.forward_body?.prompts ?? [];
+
+      const imgStates: ImageState[] = absUrls.map((url, i) => ({
+        url,
+        prompt: promptsFromServer[i] ?? "",
+        publicUrl: url.replace(/\?v=\d+$/, ""),
+      }));
+
+      setImages(imgStates);
+      setEditPrompts(promptsFromServer);
+
+      toast({
+        title: "照片生成完成",
+        description: `成功生成 ${absUrls.length} 張。${createBasePrompt ? `（${createBasePrompt}）` : ""}`,
+      });
+    } catch (e) {
+      console.error("生成失敗:", e);
+      toast({
+        title: "照片生成失敗",
+        description: e instanceof Error ? e.message : "無法連接伺服器或處理圖片。",
         variant: "destructive",
       });
-      return;
+    } finally {
+      setIsGenerating(false);
     }
-
-    // 2) 組 payload：與後端 /extract_then_generate 要求一致
-    const payload = {
-      result: resultText,
-      images_per_prompt: 1,
-      start_index: 0,
-      naming: "scene" as const,
-    };
-
-    toast({
-      title: "開始生成照片",
-      description: "AI 正在解析腳本並生成圖片…",
-    });
-
-    const resp = await fetch(API_EXTRACT_THEN_GENERATE, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-
-    if (!resp.ok) {
-      let msg = `生成 API 失敗：${resp.status}`;
-      try {
-        const err = await resp.json();
-        msg = typeof err?.detail === "string" ? err.detail : JSON.stringify(err);
-      } catch {}
-      throw new Error(msg);
-    }
-
-    const data: ExtractThenGenerateOut = await resp.json();
-
-    // 3) 轉成絕對網址 + cache-buster
-    const absUrls = (data.uploaded_urls_flat || []).map(
-      (u) => `${API_BASE_URL}${u}?v=${Date.now()}`
-    );
-    const promptsFromServer = data.forward_body?.prompts ?? [];
-
-    const imgStates: ImageState[] = absUrls.map((url, i) => ({
-      url,
-      prompt: promptsFromServer[i] ?? "",
-      publicUrl: url.replace(/\?v=\d+$/, ""),
-    }));
-
-    setImages(imgStates);
-    setEditPrompts(promptsFromServer);
-
-    toast({
-      title: "照片生成完成",
-      description: `成功生成 ${absUrls.length} 張。`,
-    });
-  } catch (e) {
-    console.error("生成失敗:", e);
-    toast({
-      title: "照片生成失敗",
-      description: e instanceof Error ? e.message : "無法連接伺服器或處理圖片。",
-      variant: "destructive",
-    });
-  } finally {
-    setIsGenerating(false);
-  }
-}, [toast, props.data]);
-
+  }, [data, toast, createBasePrompt]);
 
   // ====== 單張重生：/edit_image_store ======
   const regenerateImage = useCallback(
@@ -172,7 +168,7 @@ const ImageGenerationStep = ({ formData, onPrev, onNext, scriptText }: ImageGene
 
         // 2) FormData 準備
         const fd = new FormData();
-        fd.append("edit_prompt", currentPrompt);
+        fd.append("edit_prompt", currentPrompt ?? "");
         fd.append("file", imageBlob, `original_image_${index}.png`);
 
         // 3) 呼叫後端
@@ -186,14 +182,12 @@ const ImageGenerationStep = ({ formData, onPrev, onNext, scriptText }: ImageGene
           try {
             const err = await resp.json();
             msg = typeof err?.detail === "string" ? err.detail : JSON.stringify(err);
-          } catch {
-            // ignore
-          }
+          } catch {}
           throw new Error(msg);
         }
 
-        const data = await resp.json();
-        const rel = data.uploaded_urls?.[0];
+        const res = await resp.json();
+        const rel = res.uploaded_urls?.[0];
         if (!rel) throw new Error("後端未回傳 uploaded_urls。");
 
         const abs = `${API_BASE_URL}${rel}`;
@@ -222,7 +216,7 @@ const ImageGenerationStep = ({ formData, onPrev, onNext, scriptText }: ImageGene
     [images, editPrompts, toast]
   );
 
-  // ====== 下載全部（占位：保留 UI） ======
+  // ====== 下載全部（占位） ======
   const downloadAllImages = () => {
     toast({
       title: "下載照片",
@@ -237,7 +231,7 @@ const ImageGenerationStep = ({ formData, onPrev, onNext, scriptText }: ImageGene
   };
 
   return (
-    <Card className="max-w-6xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
+    <Card className="max-w-6xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: "var(--card-shadow)" }}>
       <CardContent className="p-8">
         <h2 className="text-2xl font-semibold text-foreground mb-2 text-center">AI 照片生成</h2>
 
@@ -256,11 +250,8 @@ const ImageGenerationStep = ({ formData, onPrev, onNext, scriptText }: ImageGene
               {isGenerating ? "正在生成照片..." : "開始生成照片"}
             </Button>
 
-            {/* 可選：顯示基礎風格供使用者確認 */}
             {createBasePrompt && (
-              <p className="mt-4 text-sm text-muted-foreground">
-                {createBasePrompt}
-              </p>
+              <p className="mt-4 text-sm text-muted-foreground">{createBasePrompt}</p>
             )}
           </div>
         ) : (
