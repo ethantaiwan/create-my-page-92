@@ -21,7 +21,7 @@ interface ScriptGenerationStepProps {
 }
 
 const ScriptGenerationStep = ({ 
-    brand, topic, videoType, platform, aspectRatio, visualStyle,
+    brand, topic, videoType, platform, aspectRatio, visualStyle, videoTechniques,
     onPrev, onNext 
 }: ScriptGenerationStepProps) => {
     
@@ -42,8 +42,9 @@ const ScriptGenerationStep = ({ 
     console.log("Platform:", platform);
     console.log("Aspect Ratio:", aspectRatio);
     console.log("Visual Style:", visualStyle);
+    console.log("videoTechniques", videoTechniques);
     console.log("-------------------------------------------------");
-    if (!brand || !topic || !videoType || !platform || !aspectRatio || !visualStyle) {
+    if (!brand || !topic || !videoType || !platform || !aspectRatio || !visualStyle || !videoTechniques) {
         setGeneratedScript("錯誤：缺少必要的表單資訊，請返回上一步。");
         setIsGenerating(false);
         return;
