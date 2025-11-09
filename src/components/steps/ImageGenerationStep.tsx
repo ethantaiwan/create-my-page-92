@@ -19,6 +19,7 @@ interface ImageGenerationStepProps {
     targetPlatform: string;
     visualStyle: string;
     videoTechniques: string;
+    scriptResult: string;
   };
   onPrev: () => void;
   onNext: () => void;
@@ -31,7 +32,8 @@ interface ImageState {
     publicUrl: string; 
 }
 
-const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepProps) => {
+//const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepProps) => {
+const ImageGenerationStep = ({ scriptResult, onPrev, onNext }: ImageGenerationStepProps) => {
   const { toast } = useToast();
   const [images, setImages] = useState<ImageState[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
