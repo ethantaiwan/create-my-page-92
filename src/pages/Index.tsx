@@ -95,10 +95,8 @@ const Index = () => {
                 return (
                     <VisualStyleStep
                         // 只需要傳遞狀態和跳轉函數
-                        selectedStyle={formData.visualStyle}
                         selectedTechnique={formData.videoTechniques}
                         selectedAspectRatio={formData.aspectRatio}
-                        onStyleChange={(value) => updateFormData("visualStyle", value)}
                         onTechniqueChange={(value) => updateFormData("videoTechniques", value)}
                         onAspectRatioChange={(value) => updateFormData("aspectRatio", value)}
                         
@@ -124,7 +122,6 @@ const Index = () => {
                         videoType={formData.videoType}
                         platform={formData.targetPlatform} 
                         aspectRatio={formData.aspectRatio}
-                        visualStyle={formData.visualStyle}
                         videoTechniques={formData.videoTechniques}
                         onPrev={prevStep}
                         onNext={handleScriptNext}
