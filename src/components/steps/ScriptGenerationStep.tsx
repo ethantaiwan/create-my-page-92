@@ -17,7 +17,6 @@ interface ScriptGenerationStepProps {
   visualStyle: string; 
   videoTechniques: string;
   onPrev: () => void;
-  // ❗ 修正點 1: 讓 onNext 接受一個 string 參數 ❗
   onNext: (script: string) => void; 
 }
 
@@ -54,7 +53,7 @@ const ScriptGenerationStep = ({ 
     const payload = {
         brand, topic, video_type: videoType, platform, aspect_ratio: aspectRatio,
         visual_style: visualStyle,
-        video_techniques: videoTechniques,
+        video_techniques: "videoTechniques q.q",
         tone: "自然、溫暖、貼近日常口語",
     };
 
