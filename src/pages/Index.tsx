@@ -115,22 +115,20 @@ const Index = () => {
                         // platform={formData.targetPlatform}
                         // onGenerateScript={handleScriptGeneration}
                         // isGenerating={isScriptGenerating}
-               
             case 4:
-                return (
-                    <ScriptGenerationStep
-                        // 
-                        // --- 這是子組件期望的 Props ---
-                        //
-                        brand={formData.brand}
-                        topic={formData.topic}
-                        videoType={formData.videoType}
-                        platform={formData.targetPlatform} // Prop 'platform' 接收 'targetPlatform' 的值
-                        aspectRatio={formData.aspectRatio}
-                        visualStyle={formData.visualStyle}
-                        onPrev={prevStep}
-                        onNext={handleScriptNext}
-                    />
+                return (
+                    <ScriptGenerationStep
+                        // ... (brand, topic, videoType, platform, aspectRatio 保持不變) ...
+                        brand={formData.brand}
+                        topic={formData.topic}
+                        videoType={formData.videoType}
+                        platform={formData.targetPlatform} 
+                        aspectRatio={formData.aspectRatio}
+                        visualStyle={formData.visualStyle}
+                        onPrev={prevStep}
+                        onNext={handleScriptNext}
+                    />
+                );   
             case 5:
                 if (!generatedScript) {
                     // 如果腳本不存在，顯示錯誤或返回上一步
