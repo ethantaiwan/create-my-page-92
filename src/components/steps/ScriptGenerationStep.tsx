@@ -50,7 +50,6 @@ const ScriptGenerationStep = ({ 
 
     const payload = {
         brand, topic, video_type: videoType, platform, aspect_ratio: aspectRatio,
-        visual_style: visualStyle,
         video_techniques: "videoTechniques q.q",
         tone: "自然、溫暖、貼近日常口語",
     };
