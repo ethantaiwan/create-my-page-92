@@ -50,7 +50,7 @@ const ScriptGenerationStep = ({ 
 
     const payload = {
         brand, topic, video_type: videoType, platform, aspect_ratio: aspectRatio,
-        video_techniques: "videoTechniques q.q",
+        video_techniques: videoTechniques,
         tone: "自然、溫暖、貼近日常口語",
     };
 
@@ -88,7 +88,7 @@ const ScriptGenerationStep = ({ 
   // 【自動執行】: 元件載入後立即執行一次腳本生成
   useEffect(() => {
     generateScript();
-  }, [brand, topic, videoType, platform, aspectRatio, visualStyle]); // 確保在父元件數據改變時重新生成
+  }, [brand, topic, videoType, platform, aspectRatio,videoTechniques]); // 確保在父元件數據改變時重新生成
 
   // 【下載文字腳本函數】 - 完整且唯一的實現
   const downloadScript = () => {
