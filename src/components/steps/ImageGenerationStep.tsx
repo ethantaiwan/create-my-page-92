@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,15 +12,10 @@ const API_BASE_URL = "https://image-generator-i03j.onrender.com";
 const API_IMAGE_GENERATE_STORE = `${API_BASE_URL}/extract_then_generate`; 
 const API_IMAGE_EDIT_STORE = `${API_BASE_URL}/edit_image_store`;
 
+// --- 【修復 1：更改 Props 介面】 ---
+// 這裡應該接收 scriptResult，而不是 formData
 interface ImageGenerationStepProps {
-  formData: {
-    companyInfo: string;
-    videoType: string;
-    targetPlatform: string;
-    visualStyle: string;
-    videoTechniques: string;
-    scriptResult: string;
-  };
+  scriptResult: string;
   onPrev: () => void;
   onNext: () => void;
 }
@@ -32,40 +27,29 @@ interface ImageState {
     publicUrl: string; 
 }
 
-//const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepProps) => {
+// --- 【修復 1：更改組件參數】 ---
 const ImageGenerationStep = ({ scriptResult, onPrev, onNext }: ImageGenerationStepProps) => {
   const { toast } = useToast();
   const [images, setImages] = useState<ImageState[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [editPrompts, setEditPrompts] = useState<string[]>(["", "", "", ""]);
-
-  // 根據表單數據組合 Base Prompt
-//  const createBasePrompt = useMemo(() => {
-//    return `Style: ${formData.visualStyle}. Techniques: ${formData.videoTechniques}.`;
-//  }, [formData]);
-
+  const [editPrompts, setEditPrompts] = useState<string[]>([]); // 用來管理每張圖的編輯提示詞
 
   // --- 1. 開始生成 (呼叫 extract_then_generate) ---
   const generateImages = useCallback(async () => {
     setIsGenerating(true);
     
-    // 1. 組合 "result" 字串 (來自 "第一步" 的 formData)
-   // const description = `公司資訊: ${formData.companyInfo}. 影片類型: ${formData.videoType}.`;
-    //const combinedPrompt = `${description}. ${createBasePrompt}`; // 這就是 data.result
-    console.log("新的：",scriptResult)
-
-    // 2. 組合新的 API Payload
+    // 1. 組合 API Payload
     const payload = {
-        result: scriptResult, // <-- 使用傳入的 prop,
+        result: scriptResult, // <-- 使用傳入的 prop
         images_per_prompt: 4, // 告訴後端我們需要 4 張
-        start_index: 0,       // 從索引 0 開始 (001.png)
+        start_index: 0, 
         naming: "scene"
     };
 
-    toast({ title: "開始生成照片", description: "AI 正在批次生成 4 張草稿圖..." });
+    toast({ title: "開始生成照片", description: "AI 正在批次生成草稿圖..." });
 
     try {
-        // 3. 呼叫新的 API (單次呼叫)
+        // 2. 呼叫 API
         const response = await fetch(API_IMAGE_GENERATE_STORE, {
             method: 'POST',
             headers: {
@@ -80,19 +64,47 @@ const ImageGenerationStep = ({ scriptResult, onPrev, onNext }: ImageGenerationSt
         }
 
         const data = await response.json();
-        
-        // 4. 處理回傳 (修正 map 語法)
-        //const newImages: ImageState[] = data.uploaded_urls.map((relativePath: string, index: number) => {
-        const newImages: ImageState[] = data.uploaded_urls_flat.map((relativePath: string, index: number) => {
-            const absoluteUrl = `${API_BASE_URL}${relativePath}`;
-            return {
-              url: `${absoluteUrl}?v=${Date.now()}`, 
-              prompt: `預設提示詞 ${index + 1} (${data.full_prompt || combinedPrompt})`, 
-              publicUrl: absoluteUrl, 
-            };
+        console.log("API 回傳的完整 data:", data); // 保留這個，方便除錯
+
+        // --- 【修復 2：使用新的 API 回應邏輯 (flatMap)】 ---
+
+        // 3. 檢查 API 回應是否包含我們需要的新結構
+        if (!data.generate_result || !Array.isArray(data.generate_result.results)) {
+            // 拋出一個明確的錯誤，會被 catch 接住
+            throw new Error("API 回應格式不符，缺少 'generate_result.results' 陣列");
+        }
+
+        // 4. 關鍵：使用 flatMap 來處理新結構
+        const newImages: ImageState[] = data.generate_result.results.flatMap((result: any) => {
+            // result 的範例: { prompt: "...", uploaded_urls: ["..."], errors: [] }
+
+            // 4a. 如果這個 prompt 沒有生成任何圖片 (例如 API 出錯)
+            if (!result.uploaded_urls || result.uploaded_urls.length === 0) {
+                if (result.errors && result.errors.length > 0) {
+                    console.warn(`一個 prompt 生成失敗: ${result.errors.join(', ')}`);
+                }
+                return []; // flatMap 會自動忽略這個空陣列
+            }
+
+            // 4b. 這個 prompt 成功生成了圖片，將它們轉換成 ImageState
+            return result.uploaded_urls.map((relativePath: string) => {
+                const absoluteUrl = `${API_BASE_URL}${relativePath}`;
+                return {
+                    url: `${absoluteUrl}?v=${Date.now()}`,
+                    prompt: result.prompt, // <-- 關鍵：使用這個 result 附帶的「正確」提示詞
+                    publicUrl: absoluteUrl,
+                };
+            });
         });
+
+        // 5. 檢查：如果 newImages 陣列為空，可能所有圖片都生成失敗
+        if (newImages.length === 0) {
+            console.warn("所有圖片均生成失敗，請檢查後端日誌。");
+            throw new Error(data.generate_result.message || "AI 未能成功生成任何圖片。");
+        }
         
         setImages(newImages);
+        // ❗ 也要同步更新 editPrompts 狀態
         setEditPrompts(newImages.map(img => img.prompt));
         
         toast({ title: "照片生成完成", description: `已成功生成 ${newImages.length} 張照片` });
@@ -100,14 +112,16 @@ const ImageGenerationStep = ({ scriptResult, onPrev, onNext }: ImageGenerationSt
     } catch (error) {
         console.error("生成失敗:", error);
         
-        // ❗ 修正 toast 語法錯誤 ❗
-        toast.error("照片生成失敗", {
+        // --- 【修復 3：修正 toast 語法】 ---
+        toast({
+            variant: 'destructive',
+            title: "照片生成失敗",
             description: error instanceof Error ? error.message : "無法連接伺服器或處理圖片。",
         });
     } finally {
         setIsGenerating(false);
     }
-  }, [scriptResult, toast]);
+  }, [scriptResult, toast]); // 依賴項
 
 
   // --- 2. 重新生成單張照片 (呼叫 /edit_image_store) ---
@@ -116,15 +130,11 @@ const ImageGenerationStep = ({ scriptResult, onPrev, onNext }: ImageGenerationSt
     const targetIndex = index; 
     const currentImage = images[index]; 
     
-   // toast({
-   //     title: "重新生成照片",
-   //     description: `正在抓取原始圖片並使用新提示詞 [${currentPrompt}] 進行編輯...`,
-   // });
     toast({
-        variant: 'destructive',
-        title: "照片生成失敗",
-        description: error instanceof Error ? error.message : "無法連接伺服器或處理圖片。",
+        title: "重新生成照片",
+        description: `正在抓取原始圖片並使用新提示詞 [${currentPrompt}] 進行編輯...`,
     });
+    
     try {
         // 1. 抓取圖片並轉為 Blob
         const imageResponse = await fetch(currentImage.url);
@@ -172,8 +182,10 @@ const ImageGenerationStep = ({ scriptResult, onPrev, onNext }: ImageGenerationSt
     } catch (error) {
         console.error("重新生成失敗:", error);
         
-        // ❗ 修正 toast 語法錯誤 ❗
-        toast.error("照片編輯失敗", {
+        // --- 【修復 3：修正 toast 語法】 ---
+        toast({
+            variant: 'destructive',
+            title: "照片編輯失敗",
             description: error instanceof Error ? error.message : "無法連接到伺服器或處理圖片。",
         });
     }
@@ -203,7 +215,7 @@ const ImageGenerationStep = ({ scriptResult, onPrev, onNext }: ImageGenerationSt
         </h2>
         
         <p className="text-center text-muted-foreground mb-8">
-          根據您的影片腳本，AI 將為您生成最多 4 張符合風格的照片。您可以調整提示詞來優化每張照片。
+          根據您的影片腳本，AI 將為您生成符合風格的照片。您可以調整提示詞來優化每張照片。
         </p>
 
         {images.length === 0 ? (
