@@ -82,7 +82,8 @@ const ImageGenerationStep = ({ scriptResult, onPrev, onNext }: ImageGenerationSt
         const data = await response.json();
         
         // 4. 處理回傳 (修正 map 語法)
-        const newImages: ImageState[] = data.uploaded_urls.map((relativePath: string, index: number) => {
+        //const newImages: ImageState[] = data.uploaded_urls.map((relativePath: string, index: number) => {
+        const newImages: ImageState[] = data.uploaded_urls_flat.map((relativePath: string, index: number) => {
             const absoluteUrl = `${API_BASE_URL}${relativePath}`;
             return {
               url: `${absoluteUrl}?v=${Date.now()}`, 
@@ -115,11 +116,15 @@ const ImageGenerationStep = ({ scriptResult, onPrev, onNext }: ImageGenerationSt
     const targetIndex = index; 
     const currentImage = images[index]; 
     
+   // toast({
+   //     title: "重新生成照片",
+   //     description: `正在抓取原始圖片並使用新提示詞 [${currentPrompt}] 進行編輯...`,
+   // });
     toast({
-        title: "重新生成照片",
-        description: `正在抓取原始圖片並使用新提示詞 [${currentPrompt}] 進行編輯...`,
+        variant: 'destructive',
+        title: "照片生成失敗",
+        description: error instanceof Error ? error.message : "無法連接伺服器或處理圖片。",
     });
-    
     try {
         // 1. 抓取圖片並轉為 Blob
         const imageResponse = await fetch(currentImage.url);
