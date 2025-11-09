@@ -50,10 +50,12 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
     // 1. 組合 "result" 字串 (來自 "第一步" 的 formData)
     const description = `公司資訊: ${formData.companyInfo}. 影片類型: ${formData.videoType}.`;
     const combinedPrompt = `${description}. ${createBasePrompt}`; // 這就是 data.result
-    console.log("印出：",combinedPrompt)
+    console.log("restult for form：",combinedPrompt)
+    console.log("印出：",scriptResult)
+
     // 2. 組合新的 API Payload
     const payload = {
-        result: combinedPrompt,
+        result: scriptResult, // <-- 使用傳入的 prop,
         images_per_prompt: 4, // 告訴後端我們需要 4 張
         start_index: 0,       // 從索引 0 開始 (001.png)
         naming: "scene"
@@ -103,7 +105,7 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
     } finally {
         setIsGenerating(false);
     }
-  }, [formData, createBasePrompt, toast]);
+  }, [scriptResult, toast]);
 
 
   // --- 2. 重新生成單張照片 (呼叫 /edit_image_store) ---
