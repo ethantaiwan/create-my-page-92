@@ -29,6 +29,13 @@ const Index = () => {
     // ----------------------------------------------------
     //  通用狀態更新函數 (已修改，支援單鍵更新和物件合併)
     // ----------------------------------------------------
+    const handleScriptNext = (script: string) => {
+        // 將 data.result (腳本) 儲存到父組件的 state 中
+        setGeneratedScript(script); 
+        
+        // 執行通用的 "下一步"
+        nextStep(); 
+    };
     const updateFormData = (key, value) => {
         // 處理 CompanyInfoStep 傳入的物件 {brand: v1, topic: v2}
         if (typeof key === 'object' && key !== null) {
@@ -121,13 +128,15 @@ const Index = () => {
                         visualStyle={formData.videoTechniques}
                         
                         onPrev={prevStep}
-                        onNext={nextStep}
+                        //onNext={nextStep}
+                        onNext={handleScriptNext}
                     />
                 );
             case 5:
                 return (
                     <ImageGenerationStep
-                        formData={formData}
+                       // formData={formData}
+                        scriptResult={generatedScript}
                         onPrev={prevStep}
                         onNext={nextStep}
                     />
