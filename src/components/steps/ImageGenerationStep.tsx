@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast"; // 假設您的 toast hook 路徑
 const API_BASE_URL = "https://image-generator-i03j.onrender.com"; 
 
 // ❗ 假設 /api/extract_then_generate 是您後端的新路由
-const API_IMAGE_GENERATE_STORE = `${API_BASE_URL}/api/extract_then_generate`; 
+const API_IMAGE_GENERATE_STORE = `${API_BASE_URL}/extract_then_generate`; 
 const API_IMAGE_EDIT_STORE = `${API_BASE_URL}/edit_image_store`;
 
 interface ImageGenerationStepProps {
