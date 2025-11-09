@@ -9,14 +9,15 @@ const API_URL = "https://dyscriptgenerator.onrender.com/generate-script"; // �
 
 // 修正 Props 介面：接收所有 API 所需的參數
 interface ScriptGenerationStepProps {
-  brand: string;
-  topic: string;
-  videoType: string; 
-  platform: string;
-  aspectRatio: string;
-  visualStyle: string; 
-  onPrev: () => void;
-  onNext: () => void;
+  brand: string;
+  topic: string;
+  videoType: string; 
+  platform: string;
+  aspectRatio: string;
+  visualStyle: string; 
+  onPrev: () => void;
+  // ❗ 修正點 1: 讓 onNext 接受一個 string 參數 ❗
+  onNext: (script: string) => void; 
 }
 
 const ScriptGenerationStep = ({ 
@@ -169,7 +170,7 @@ const ScriptGenerationStep = ({ 
                 下載文字腳本
               </Button>
               <Button 
-                onClick={onNext}
+                onClick={() => onNext(generatedScript)}
                 className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-base font-medium"
                 disabled={isGenerating || !generatedScript || generatedScript.startsWith("腳本生成失敗")}
               >
