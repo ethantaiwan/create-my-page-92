@@ -14,14 +14,13 @@ interface ScriptGenerationStepProps {
   videoType: string; 
   platform: string;
   aspectRatio: string;
-  visualStyle: string; 
   videoTechniques: string;
   onPrev: () => void;
   onNext: (script: string) => void; 
 }
 
 const ScriptGenerationStep = ({ 
-    brand, topic, videoType, platform, aspectRatio, visualStyle, videoTechniques,
+    brand, topic, videoType, platform, aspectRatio, videoTechniques,
     onPrev, onNext 
 }: ScriptGenerationStepProps) => {
     
@@ -41,7 +40,6 @@ const ScriptGenerationStep = ({ 
     console.log("Video Type:", videoType);
     console.log("Platform:", platform);
     console.log("Aspect Ratio:", aspectRatio);
-    console.log("Visual Style:", visualStyle);
     console.log("videoTechniques", videoTechniques);
     console.log("-------------------------------------------------");
     if (!brand || !topic || !videoType || !platform || !aspectRatio || !videoTechniques) {
