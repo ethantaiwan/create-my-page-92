@@ -126,21 +126,30 @@ const Index = () => {
                         platform={formData.targetPlatform}
                         aspectRatio={formData.aspectRatio}
                         visualStyle={formData.videoTechniques}
-                        
+                        visualStyle={formData.visualStyle}
                         onPrev={prevStep}
                         //onNext={nextStep}
                         onNext={handleScriptNext}
                     />
                 );
             case 5:
-                return (
-                    <ImageGenerationStep
-                       // formData={formData}
-                        scriptResult={generatedScript}
-                        onPrev={prevStep}
-                        onNext={nextStep}
-                    />
-                );
+                if (!generatedScript) {
+                    // 如果腳本不存在，顯示錯誤或返回上一步
+                    return (
+                        <div>
+                            <p>錯誤：沒有腳本數據。請返回上一步。</p>
+                            <Button onClick={prevStep}>返回上一步</Button>
+                        </div>
+                    );
+                }
+                // 如果腳本存在，才渲染 ImageGenerationStep
+                return (
+                    <ImageGenerationStep
+                        scriptResult={generatedScript} // (這部分您是正確的)
+                        onPrev={prevStep}
+                        onNext={nextStep}
+                    />
+                );
             case 6:
                 return (
                     <VideoGenerationStep
