@@ -38,9 +38,9 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
   const [editPrompts, setEditPrompts] = useState<string[]>(["", "", "", ""]);
 
   // 根據表單數據組合 Base Prompt
-  const createBasePrompt = useMemo(() => {
-    return `Style: ${formData.visualStyle}. Techniques: ${formData.videoTechniques}.`;
-  }, [formData]);
+//  const createBasePrompt = useMemo(() => {
+//    return `Style: ${formData.visualStyle}. Techniques: ${formData.videoTechniques}.`;
+//  }, [formData]);
 
 
   // --- 1. 開始生成 (呼叫 extract_then_generate) ---
@@ -64,7 +64,7 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
 
     try {
         // 3. 呼叫新的 API (單次呼叫)
-        const response = await fetch(extract_then_generate, {
+        const response = await fetch(API_IMAGE_GENERATE_STORE, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
