@@ -119,19 +119,18 @@ const Index = () => {
             case 4:
                 return (
                     <ScriptGenerationStep
-                        // 將所有 API 呼叫所需的參數都傳給它
+                        // 
+                        // --- 這是子組件期望的 Props ---
+                        //
                         brand={formData.brand}
                         topic={formData.topic}
                         videoType={formData.videoType}
-                        platform={formData.targetPlatform}
+                        platform={formData.targetPlatform} // Prop 'platform' 接收 'targetPlatform' 的值
                         aspectRatio={formData.aspectRatio}
-                        visualStyle={formData.videoTechniques}
                         visualStyle={formData.visualStyle}
                         onPrev={prevStep}
-                        //onNext={nextStep}
                         onNext={handleScriptNext}
                     />
-                );
             case 5:
                 if (!generatedScript) {
                     // 如果腳本不存在，顯示錯誤或返回上一步
