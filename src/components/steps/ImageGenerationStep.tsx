@@ -50,8 +50,8 @@ const ImageGenerationStep = ({ formData, onPrev, onNext }: ImageGenerationStepPr
     // 1. 組合 "result" 字串 (來自 "第一步" 的 formData)
     const description = `公司資訊: ${formData.companyInfo}. 影片類型: ${formData.videoType}.`;
     const combinedPrompt = `${description}. ${createBasePrompt}`; // 這就是 data.result
-    console.log("restult for form：",combinedPrompt)
-    console.log("印出：",scriptResult)
+    console.log("新的：",scriptResult)
+    console.log("舊的結果是：",combinedPrompt)
 
     // 2. 組合新的 API Payload
     const payload = {
