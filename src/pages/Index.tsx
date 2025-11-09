@@ -125,6 +125,7 @@ const Index = () => {
                         platform={formData.targetPlatform} 
                         aspectRatio={formData.aspectRatio}
                         visualStyle={formData.visualStyle}
+                        videoTechniques={formData.videoTechniques}
                         onPrev={prevStep}
                         onNext={handleScriptNext}
                     />
