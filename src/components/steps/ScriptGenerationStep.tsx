@@ -61,7 +61,7 @@ const ScriptGenerationStep = ({ 
         const data = await response.json();
         
         if (data && data.result) {
-            console.log("result:", data.result)
+            console.log("結果是:", data.result)
             setGeneratedScript(data.result); 
         } else {
             throw new Error("API 回應未包含預期的 'result' 鍵。");
