@@ -29,11 +29,8 @@ const ImageGenerationStep = ({ scriptResult, onPrev, onNext }: ImageGenerationSt
   const { toast } = useToast();
   const [images, setImages] = useState<ImageState[]>([]);
   const [isGenerating, setIsGenerating] = useState(false); // (全域生成)
+  const [isRegenerating, setIsRegenerating] = useState<number | null>(null); // (單張生成)
   const [editPrompts, setEditPrompts] = useState<string[]>([]);
-
-  // --- 【修復 1：新增 State】 ---
-  // 追蹤哪一張圖片正在單獨重新生成 (null: 都沒有, 0: 第0張, 1: 第1張...)
-  const [isRegenerating, setIsRegenerating] = useState<number | null>(null);
 
   // --- 1. 開始生成 (呼叫 extract_then_generate) ---
   // (此函數保持不變)
@@ -81,7 +78,7 @@ const ImageGenerationStep = ({ scriptResult, onPrev, onNext }: ImageGenerationSt
                 return {
                     url: `${absoluteUrl}?v=${Date.now()}`,
                     prompt: result.prompt, 
-                    publicUrl: absoluteUrl,
+                    publicUrl: absoluteUrl, // 我們將下載這個 URL
                 };
             });
         });
@@ -110,26 +107,22 @@ const ImageGenerationStep = ({ scriptResult, onPrev, onNext }: ImageGenerationSt
 
 
   // --- 2. 重新生成單張照片 (呼叫 /edit_image_store) ---
+  // (此函數保持不變)
   const regenerateImage = useCallback(async (index: number) => {
-    
-    // --- 【修復 2：設置載入狀態】 ---
-    setIsRegenerating(index); // <-- 鎖定此按鈕
-
+    setIsRegenerating(index); // 鎖定此按鈕
     const currentPrompt = editPrompts[index];
     const targetIndex = index; 
     const currentImage = images[index]; 
     
-    // (這就是您在截圖 3 中看到的 toast)
     toast({
         title: "重新生成照片",
         description: `正在抓取原始圖片並使用新提示詞 [${currentPrompt}] 進行編輯...`,
     });
     
     try {
+        // ... (省略 fetch 邏輯，與上一版相同) ...
         const imageResponse = await fetch(currentImage.url);
-        if (!imageResponse.ok) {
-            throw new Error(`無法抓取原始圖片進行編輯: ${imageResponse.status}`);
-        }
+        if (!imageResponse.ok) throw new Error(`無法抓取原始圖片: ${imageResponse.status}`);
         const imageBlob = await imageResponse.blob();
 
         const formData = new FormData();
@@ -142,12 +135,11 @@ const ImageGenerationStep = ({ scriptResult, onPrev, onNext }: ImageGenerationSt
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.detail || `API 錯誤: ${response.status}`);
+          const errorData = await response.json();
+          throw new Error(errorData.detail || `API 錯誤: ${response.status}`);
         }
 
         const data = await response.json();
-        
         const newPublicRelativeUrl = data.uploaded_urls[0]; 
         const absoluteUrl = `${API_BASE_URL}${newPublicRelativeUrl}`;
         
@@ -157,10 +149,8 @@ const ImageGenerationStep = ({ scriptResult, onPrev, onNext }: ImageGenerationSt
             url: `${absoluteUrl}?v=${Date.now()}`, 
             publicUrl: absoluteUrl,
         };
-        
         setImages(newImages);
 
-        // (這就是您在截圖 2 中看到的 toast)
         toast({
             title: "照片已更新",
             description: `第 ${index + 1} 張照片已重新生成並儲存。`,
@@ -174,18 +164,86 @@ const ImageGenerationStep = ({ scriptResult, onPrev, onNext }: ImageGenerationSt
             description: error instanceof Error ? error.message : "無法連接到伺服器或處理圖片。",
         });
     } finally {
-        // --- 【修復 2：解除載入狀態】 ---
-        setIsRegenerating(null); // <-- 解鎖此按鈕
+        setIsRegenerating(null); // 解鎖此按鈕
     }
   }, [images, editPrompts, toast]); 
 
-  // --- 3. 下載和更新 Prompt (保持不變) ---
-  const downloadAllImages = () => {
+  // --- 3. 下載和更新 Prompt ---
+
+  // --- 【修復：實作下載功能】 ---
+  const downloadAllImages = useCallback(async () => {
+    // 檢查是否有圖片可下載
+    if (images.length === 0) {
+         toast({ title: "沒有可下載的圖片", variant: "destructive" });
+         return;
+    }
+    
+    // 檢查是否有任務正在執行
+    if (isGenerating || isRegenerating !== null) {
+        toast({ title: "錯誤", description: "請等待目前生成作業完成", variant: "destructive" });
+        return;
+    }
+
     toast({
-      title: "下載照片",
-      description: "正在準備下載所有照片 (此功能需要後端支援文件打包)...",
+      title: "開始下載全部照片",
+      description: `準備下載 ${images.length} 張照片...`,
     });
-  };
+
+    // 我們將循序 (一張接一張) 下載，避免瀏覽器阻擋
+    let downloadedCount = 0;
+    let failedCount = 0;
+
+    // 使用 for...of 迴圈才能正確使用 await
+    for (const [index, image] of images.entries()) {
+        const filename = `scene_${index + 1}.png`; // e.g., scene_1.png
+        
+        try {
+            // 1. 抓取圖片資料 (使用 publicUrl)
+            // 必須抓取 Blob 才能繞過CORS限制並自訂檔名
+            const response = await fetch(image.publicUrl); 
+            if (!response.ok) {
+                throw new Error(`無法抓取圖片: ${response.statusText}`);
+            }
+            const blob = await response.blob();
+
+            // 2. 建立本地 Blob URL
+            const objectUrl = URL.createObjectURL(blob);
+
+            // 3. 建立 <a> 標籤來觸發下載
+            const link = document.createElement('a');
+            link.href = objectUrl;
+            link.download = filename; // 指定下載的檔名
+
+            // 4. 觸發下載
+            document.body.appendChild(link);
+            link.click();
+
+            // 5. 清理
+            document.body.removeChild(link);
+            URL.revokeObjectURL(objectUrl); // 釋放記憶體
+            
+            downloadedCount++;
+
+        } catch (error) {
+            console.error(`下載第 ${index + 1} 張照片失敗:`, error);
+            failedCount++;
+        }
+    }
+
+    // 6. 最終通知
+    if (failedCount > 0) {
+        toast({
+            variant: "destructive",
+            title: "下載部分完成",
+            description: `成功 ${downloadedCount} 張, 失敗 ${failedCount} 張。`,
+        });
+    } else {
+        toast({
+            title: "下載完成",
+            description: `已成功下載 ${images.length} 張照片。`,
+        });
+    }
+  }, [images, toast, isGenerating, isRegenerating]); // 加上依賴項
 
   const updatePrompt = (index: number, value: string) => {
     const newPrompts = [...editPrompts];
@@ -193,7 +251,6 @@ const ImageGenerationStep = ({ scriptResult, onPrev, onNext }: ImageGenerationSt
     setEditPrompts(newPrompts);
   };
 
-  // --- 4. JSX 渲染 (保持不變) ---
   return (
     <Card className="max-w-6xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
       <CardContent className="p-8">
