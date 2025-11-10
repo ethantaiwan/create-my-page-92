@@ -41,7 +41,7 @@ const ImageGenerationStep = ({ scriptResult, onPrev, onNext }: ImageGenerationSt
     // 1. 組合 API Payload
     const payload = {
         result: scriptResult, // <-- 使用傳入的 prop
-        images_per_prompt: 4, // 告訴後端我們需要 4 張
+        images_per_prompt: 1, // 告訴後端我們需要 4 張
         start_index: 0, 
         naming: "scene"
     };
