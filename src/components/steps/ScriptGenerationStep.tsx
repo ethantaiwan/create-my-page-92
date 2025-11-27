@@ -43,6 +43,7 @@ const ScriptGenerationStep = ({ 
     console.log("Platform:", platform);
     console.log("Aspect Ratio:", aspectRatio);
     console.log("videoTechniques", videoTechniques);
+    console.log("scencecount", sceneCount);
     console.log("-------------------------------------------------");
     if (!brand || !topic || !videoType || !platform || !aspectRatio || !videoTechniques) {
         setGeneratedScript("錯誤：缺少必要的表單資訊，請返回上一步。");
