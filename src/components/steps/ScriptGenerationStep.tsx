@@ -15,8 +15,10 @@ interface ScriptGenerationStepProps {
   platform: string;
   aspectRatio: string;
   videoTechniques: string;
+  sceneCount: number;   // 🔥 新增
   onPrev: () => void;
   onNext: (script: string) => void; 
+  
 }
 
 const ScriptGenerationStep = ({ 
@@ -51,6 +53,7 @@ const ScriptGenerationStep = ({ 
     const payload = {
         brand, topic, video_type: videoType, platform, aspect_ratio: aspectRatio,
         video_techniques: videoTechniques,
+        scene_count: sceneCount,   
         tone: "自然、溫暖、貼近日常口語",
     };
 
