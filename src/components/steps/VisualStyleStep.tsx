@@ -12,10 +12,12 @@ interface VisualStyleStepProps {
   selectedStyle: string;
   selectedTechnique: string;
   selectedAspectRatio: string;
+  sceneCount: number;
   onStyleChange: (value: string) => void;
   onTechniqueChange: (value: string) => void;
   onAspectRatioChange: (value: string) => void;
-  
+  onSceneCountChange: (value: number) => void;
+
   // 恢復標準的 onNext 函數
   onNext: () => void; 
   onPrev: () => void;
@@ -111,7 +113,32 @@ const VisualStyleStep = ({
               ))}
             </div>
           </div>
+
           
+          {/* 分鏡數量 Slider */}
+          <div>
+            <h3 className="text-lg font-semibold mb-4">
+              分鏡數量（Scenes）：{sceneCount} 個
+            </h3>
+
+            <div className="px-4">
+              <Slider
+                value={[sceneCount]}
+                onValueChange={(val) => onSceneCountChange(val[0])}
+                min={2}
+                max={8}
+                step={1}
+                className="w-full"
+              />
+            </div>
+
+            <div className="flex justify-between text-sm mt-2 text-muted-foreground px-1">
+              <span>2</span>
+              <span>4</span>
+              <span>6</span>
+              <span>8</span>
+            </div>
+          </div>
           <div className="flex justify-between">
             <Button 
               variant="outline"
