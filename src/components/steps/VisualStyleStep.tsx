@@ -1,6 +1,7 @@
 import React from 'react'; // 確保只導入 React
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";  
 import realisticPhotoImg from "@/assets/style-realistic-photo-new.png";
 import animation3dImg from "@/assets/style-3d-animation.jpg";
 import japaneseHanddrawnImg from "@/assets/style-japanese-handdrawn.jpg";
