@@ -50,9 +50,11 @@ const VisualStyleStep = ({
   selectedStyle, 
   selectedTechnique,
   selectedAspectRatio,
+  sceneCount,             
   onStyleChange, 
   onTechniqueChange,
   onAspectRatioChange,
+  onSceneCountChange,      
   onPrev,
   onNext // <-- 接收 onNext
 }: VisualStyleStepProps) => {
