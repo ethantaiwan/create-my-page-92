@@ -21,6 +21,7 @@ const Index = () => {
         visualStyle: "",
         videoTechniques: "",
         aspectRatio: "",
+        sceneCount: 4,   // ⭐⭐⭐ 必須有預設值（不能 undefined）
     });
 
     const [generatedScript, setGeneratedScript] = useState<string | null>(null); 
@@ -101,7 +102,7 @@ const Index = () => {
                         onTechniqueChange={(value) => updateFormData("videoTechniques", value)}
                         onAspectRatioChange={(value) => updateFormData("aspectRatio", value)}
                         onSceneCountChange={(value) => updateFormData("sceneCount", value)} 
-                        
+
                         // 恢復標準跳轉
                         onNext={nextStep} // <--- 關鍵：使用 onNext
                         onPrev={prevStep}
