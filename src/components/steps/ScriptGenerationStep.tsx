@@ -22,7 +22,7 @@ interface ScriptGenerationStepProps {
 }
 
 const ScriptGenerationStep = ({ 
-    brand, topic, videoType, platform, aspectRatio, videoTechniques,
+    brand, topic, videoType, platform, aspectRatio, videoTechniques,sceneCount,  
     onPrev, onNext 
 }: ScriptGenerationStepProps) => {
     
