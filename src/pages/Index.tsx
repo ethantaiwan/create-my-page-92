@@ -97,8 +97,10 @@ const Index = () => {
                         // 只需要傳遞狀態和跳轉函數
                         selectedTechnique={formData.videoTechniques}
                         selectedAspectRatio={formData.aspectRatio}
+                        sceneCount={formData.sceneCount} 
                         onTechniqueChange={(value) => updateFormData("videoTechniques", value)}
                         onAspectRatioChange={(value) => updateFormData("aspectRatio", value)}
+                        onSceneCountChange={(value) => updateFormData("sceneCount", value)} 
                         
                         // 恢復標準跳轉
                         onNext={nextStep} // <--- 關鍵：使用 onNext
@@ -123,6 +125,7 @@ const Index = () => {
                         platform={formData.targetPlatform} 
                         aspectRatio={formData.aspectRatio}
                         videoTechniques={formData.videoTechniques}
+                        sceneCount={sceneCount}   
                         onPrev={prevStep}
                         onNext={handleScriptNext}
                     />
