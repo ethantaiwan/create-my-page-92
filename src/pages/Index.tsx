@@ -13,7 +13,6 @@ const API_URL = "https://dyscriptgenerator.onrender.com/generate-script";
 const Index = () => {
     const [currentStep, setCurrentStep] = useState(1);
     const [formData, setFormData] = useState({
-        // 【修正點 1: 將 companyInfo 替換為 brand 和 topic】
         brand: "",
         topic: "",
         videoType: "",
@@ -68,7 +67,7 @@ const Index = () => {
     //  渲染邏輯
     // ----------------------------------------------------
     const renderCurrentStep = () => {
-        
+        console.log(`[STATE CHECK] Current Step: ${currentStep}, Script Status:`, generatedScript);
         switch (currentStep) {
             case 1:
                 return (
@@ -141,6 +140,8 @@ const Index = () => {
                         </div>
                     );
                 }
+
+                
                 // 如果腳本存在，才渲染 ImageGenerationStep
                 return (
                     <ImageGenerationStep
@@ -149,10 +150,12 @@ const Index = () => {
                         onNext={nextStep}
                     />
                 );
+
             case 6:
                 return (
                     <VideoGenerationStep
                         formData={formData}
+                        generatedScript={generatedScript} // ⭐ 新增這一行：傳遞腳本
                         onPrev={prevStep}
                     />
                 );
