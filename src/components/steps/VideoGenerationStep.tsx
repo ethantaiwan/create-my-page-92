@@ -38,7 +38,7 @@ const VideoGenerationStep = ({ formData, generatedScript, onPrev }: VideoGenerat
       // ----------------------------------------------------
       // 步驟 A: 呼叫 prompt-extrval 提取提示詞
       // ----------------------------------------------------
-      const promptResponse = await fetch("https://dyscriptgenerator.onrender.com/prompt-extrval", {
+      const promptResponse = await fetch("https://dyscriptgenerator.onrender.com/prompt-retrieval", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ 
