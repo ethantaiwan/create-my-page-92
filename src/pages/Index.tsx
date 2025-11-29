@@ -31,6 +31,7 @@ const Index = () => {
     // ----------------------------------------------------
     const handleScriptNext = (script: string) => {
         // 將 data.result (腳本) 儲存到父組件的 state 中
+        console.log("[DEBUG-FIX] handleScriptNext 接收到的腳本：", script);
         setGeneratedScript(script); 
         
         // 執行通用的 "下一步"
