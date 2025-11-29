@@ -6,14 +6,11 @@ import { useToast } from "@/hooks/use-toast";
 
 interface VideoGenerationStepProps {
   formData: {
-    brand: string;      // 根據 index.ts 的 formData 修改了這裡的型別定義以匹配
-    topic: string;
-    videoType: string;
-    targetPlatform: string;
-    visualStyle: string;
-    videoTechniques: string;
+    sceneCount: number; // 我們需要這個數字來決定有幾張圖
+    // ... 其他屬性如果沒用到可以不用列，但為了型別完整建議保留
+    [key: string]: any; 
   };
-  generatedScript: string | null; // ⭐ 新增：接收腳本
+  generatedScript: string | null;
   onPrev: () => void;
 }
 
@@ -21,10 +18,10 @@ const VideoGenerationStep = ({ formData, generatedScript, onPrev }: VideoGenerat
   const { toast } = useToast();
   const [videoUrl, setVideoUrl] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [statusMessage, setStatusMessage] = useState(""); // 用來顯示當前進度文字
+  const [statusMessage, setStatusMessage] = useState("");
 
   const generateVideo = async () => {
-    // 1. 檢查是否有腳本
+    // 1. 檢查腳本是否存在
     if (!generatedScript) {
       toast({
         variant: "destructive",
@@ -36,68 +33,100 @@ const VideoGenerationStep = ({ formData, generatedScript, onPrev }: VideoGenerat
 
     setIsGenerating(true);
     setStatusMessage("正在分析腳本並提取視覺提示詞...");
-    
+
     try {
       // ----------------------------------------------------
-      // 步驟 1: 呼叫 prompt-extrval 提取提示詞
+      // 步驟 A: 呼叫 prompt-extrval 提取提示詞
       // ----------------------------------------------------
       const promptResponse = await fetch("https://dyscriptgenerator.onrender.com/prompt-extrval", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        // 假設後端接收 { script: string } 格式
-        body: JSON.stringify({ script: generatedScript }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+            script: generatedScript 
+        }),
       });
 
-      if (!promptResponse.ok) {
-        throw new Error("提示詞提取失敗");
+      if (!promptResponse.ok) throw new Error("提示詞提取失敗");
+
+      const promptData = await promptResponse.json();
+      console.log("Extracted Prompts:", promptData);
+
+      // 處理提示詞轉字串 (假設 promptData 本身就是結果，或是物件內的某個欄位)
+      // 根據您的描述，這裡做個簡單的防呆處理
+      let finalPromptString = "";
+      if (typeof promptData === 'string') {
+          finalPromptString = promptData;
+      } else if (Array.isArray(promptData)) {
+          finalPromptString = promptData.join(" ");
+      } else if (promptData.video_prompts) {
+          finalPromptString = Array.isArray(promptData.video_prompts) 
+            ? promptData.video_prompts.join(" ") 
+            : JSON.stringify(promptData.video_prompts);
+      } else {
+          finalPromptString = JSON.stringify(promptData);
       }
 
-      // 假設回傳格式是直接的 List 或包在物件中，這裡假設回傳的是要直接丟給下一步的資料
-      const promptData = await promptResponse.json();
+      setStatusMessage("提示詞準備完成，正在生成最終影片...");
+
+      // ----------------------------------------------------
+      // 步驟 B: 準備圖片列表 (這裡就是您提到的修改點)
+      // ----------------------------------------------------
+      // 邏輯：根據 sceneCount 生成對應數量的 URL
+      // 例如 sceneCount = 3 -> 001.png, 002.png, 003.png
       
-      console.log("Prompts extracted:", promptData);
+      const count = formData.sceneCount || 4; // 預設 4 張以防萬一
+      const generatedImageUrls = Array.from({ length: count }, (_, i) => {
+          // 將數字補零至 3 位數，例如 1 -> "001"
+          const paddedIndex = String(i + 1).padStart(3, '0');
+          return `https://image-generator-i03j.onrender.com/image-uploads/temp/${paddedIndex}.png`;
+      });
 
-      setStatusMessage("提示詞提取完成，正在生成影片 (這可能需要幾分鐘)...");
+      console.log("Using Image URLs:", generatedImageUrls);
 
       // ----------------------------------------------------
-      // 步驟 2: 呼叫 generate-final-video 生成影片
+      // 步驟 C: 呼叫 generate-final-video
       // ----------------------------------------------------
+      const videoPayload = {
+        prompt: finalPromptString,
+        image_urls: generatedImageUrls,
+        // ▼▼▼ 以下參數依照您的要求寫死 ▼▼▼
+        style: "realistic",
+        width: 1024,
+        height: 1024,
+        duration: 5,
+        fps: 24,
+        assemble: "auto",
+        transition_duration: 0.0,
+        outro_duration: 5,
+        model_name: "",
+        mode: ""
+      };
+
       const videoResponse = await fetch("https://videogenerator-ayob.onrender.com/generate-final-video", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        // 將上一步得到的 prompt list 放入 payload
-        // 注意：這裡假設後端接收的 key 是 "video_prompts" 或直接是 promptData
-        // 如果 promptData 本身就是 List，則可能需要包裝成 { prompts: promptData }
-        body: JSON.stringify(promptData), 
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(videoPayload),
       });
 
-      if (!videoResponse.ok) {
-        throw new Error("影片生成服務回應錯誤");
-      }
+      if (!videoResponse.ok) throw new Error("影片生成服務回應錯誤");
 
       const videoResult = await videoResponse.json();
       
-      // ----------------------------------------------------
-      // 步驟 3: 組合最終影片 URL
-      // ----------------------------------------------------
       if (videoResult && videoResult.final_video_url) {
+        // 組合 Base URL
         const finalUrl = `https://videogenerator-ayob.onrender.com/${videoResult.final_video_url}`;
         setVideoUrl(finalUrl);
         
         toast({
           title: "影片生成完成",
-          description: "您的 AI 影片已準備就緒！",
+          description: "您的影片已成功生成！",
         });
       } else {
         throw new Error("無法取得影片連結");
       }
 
     } catch (error) {
-      console.error("Generation error:", error);
+      console.error("Error:", error);
       toast({
         variant: "destructive",
         title: "生成失敗",
@@ -113,28 +142,21 @@ const VideoGenerationStep = ({ formData, generatedScript, onPrev }: VideoGenerat
     if (videoUrl) {
       const link = document.createElement('a');
       link.href = videoUrl;
-      link.target = '_blank'; // 建議開新視窗，因為跨域下載有時會被阻擋
+      link.target = '_blank';
       link.download = 'generated-video.mp4';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
-      toast({
-        title: "下載影片",
-        description: "若下載未自動開始，請在影片上按右鍵另存。",
-      });
     }
   };
 
   return (
     <Card className="max-w-5xl mx-auto bg-accent/10 border-primary/20" style={{ boxShadow: 'var(--card-shadow)' }}>
       <CardContent className="p-8">
-        <h2 className="text-2xl font-semibold text-foreground mb-2 text-center">
-          AI 影片生成
-        </h2>
+        <h2 className="text-2xl font-semibold text-foreground mb-2 text-center">AI 影片生成</h2>
         
         <p className="text-center text-muted-foreground mb-8">
-          將您的腳本和照片合成為專業影片。AI 會自動添加轉場效果、配樂和字幕。
+          AI 正在根據腳本與第 {formData.sceneCount || 4} 步生成的圖片合成影片。
         </p>
 
         {!videoUrl ? (
@@ -143,12 +165,7 @@ const VideoGenerationStep = ({ formData, generatedScript, onPrev }: VideoGenerat
               <div className="inline-block p-6 bg-primary/10 rounded-full mb-4">
                 <Play className="w-16 h-16 text-primary" />
               </div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">
-                準備生成您的影片
-              </h3>
-              <p className="text-muted-foreground max-w-md mx-auto">
-                點擊下方按鈕開始生成。生成過程可能需要 3-5 分鐘，請耐心等待。
-              </p>
+              <h3 className="text-xl font-semibold text-foreground mb-2">準備生成您的影片</h3>
             </div>
             
             <Button
@@ -162,11 +179,11 @@ const VideoGenerationStep = ({ formData, generatedScript, onPrev }: VideoGenerat
             
             {isGenerating && (
               <div className="mt-8">
-                <div className="w-full max-w-md mx-auto bg-muted rounded-full h-2 overflow-hidden">
+                 <div className="w-full max-w-md mx-auto bg-muted rounded-full h-2 overflow-hidden mb-2">
                   <div className="h-full bg-primary animate-pulse" style={{ width: '60%' }}></div>
                 </div>
-                <p className="text-sm text-muted-foreground mt-2 animate-pulse">
-                    {statusMessage || "正在連線至 AI 伺服器..."}
+                <p className="text-sm text-muted-foreground animate-pulse">
+                    {statusMessage || "正在連線..."}
                 </p>
               </div>
             )}
@@ -177,52 +194,24 @@ const VideoGenerationStep = ({ formData, generatedScript, onPrev }: VideoGenerat
               <CardContent className="p-6">
                 <div className="aspect-video bg-black rounded-lg overflow-hidden mb-4 relative">
                   <video 
-                    src={videoUrl}
-                    controls
+                    src={videoUrl} 
+                    controls 
                     className="w-full h-full"
                     controlsList="nodownload"
-                    preload="metadata"
                   >
                     您的瀏覽器不支持視頻播放。
                   </video>
                 </div>
-                
-                <div className="flex items-center justify-between text-sm text-muted-foreground">
-                  <span>狀態：生成成功</span>
-                  {/* 可以根據實際 API 回傳增加更多資訊 */}
-                  <span>格式：MP4</span>
-                </div>
               </CardContent>
             </Card>
-
             <div className="flex justify-center space-x-4">
-              <Button 
-                variant="outline"
-                onClick={onPrev}
-                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-3 text-base font-medium"
-              >
-                ← 上一步
-              </Button>
-              
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setVideoUrl("");
-                  generateVideo();
-                }}
-                className="border-primary text-primary hover:bg-primary hover:text-primary-foreground px-8 py-3 text-base font-medium"
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                重新生成影片
-              </Button>
-              
-              <Button
-                onClick={downloadVideo}
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-8 py-3 text-base font-medium"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                下載影片
-              </Button>
+                <Button variant="outline" onClick={onPrev}>← 上一步</Button>
+                <Button variant="outline" onClick={() => { setVideoUrl(""); generateVideo(); }}>
+                    <RefreshCw className="w-4 h-4 mr-2" /> 重新生成
+                </Button>
+                <Button onClick={downloadVideo}>
+                    <Download className="w-4 h-4 mr-2" /> 下載影片
+                </Button>
             </div>
           </div>
         )}
